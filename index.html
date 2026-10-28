@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>About You · Michie Archive</title>
+<meta name="theme-color" content="#f6f6f6" />
+<link rel="icon" href="about-u/album.jpg" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#191919;
+  --bg:#f6f6f6;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:"Inter Tight","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --serif:"Instrument Serif","Playfair Display",Georgia,serif;
+  --g:34px;
+  --gt:calc(25px + env(safe-area-inset-top));
+  --gb:calc(26px + env(safe-area-inset-bottom));
+  --gl:calc(var(--g) + env(safe-area-inset-left));
+  --gr:calc(var(--g) + env(safe-area-inset-right));
+}
+html,body{height:100%;background:var(--bg);color:var(--ink);overflow:hidden;overscroll-behavior:none}
+body{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+body.has-cursor #gl{cursor:none}
+button{touch-action:manipulation}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;inset:0;z-index:20;pointer-events:none;color:var(--ink);
+  font:500 10.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;opacity:0;transition:opacity .9s}
+body.ready #hud{opacity:1}
+.h-name{position:fixed;top:var(--gt);left:var(--gl);font:700 15px/1 var(--sans);letter-spacing:-.02em}
+.h-rec{position:fixed;top:calc(var(--gt) + 2px);right:var(--gr);display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums}
+.h-rec .dot{width:7px;height:7px;border-radius:50%;background:#e23b2e;opacity:.25}
+body.playing .h-rec .dot{animation:blink 1s steps(1) infinite}
+@keyframes blink{0%{opacity:1}50%{opacity:.15}}
+.h-now{position:fixed;left:var(--gl);bottom:var(--gb);display:flex;align-items:center;gap:12px}
+.h-now .disc{position:relative;width:36px;height:36px;border-radius:50%;overflow:hidden;flex:none}
+.h-now img{width:100%;height:100%;object-fit:cover;filter:grayscale(1);transition:filter .6s}
+.h-now .disc::after{content:'';position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px;border-radius:50%;background:var(--bg)}
+body.playing .h-now img{filter:none}
+body.playing .h-now .disc{animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.h-now b{display:block;font:600 13px/1.1 var(--sans);letter-spacing:-.01em;text-transform:none;margin-bottom:5px}
+.h-frame{position:fixed;right:var(--gr);bottom:var(--gb);display:flex;gap:18px;align-items:center;font-variant-numeric:tabular-nums}
+.h-btn{pointer-events:auto;border:0;background:none;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:10px 0;margin:-10px 0}
+.h-bar{position:fixed;left:0;right:0;bottom:0;height:calc(14px + env(safe-area-inset-bottom));pointer-events:auto;cursor:pointer}
+.h-bar::before,.h-bar i{content:'';position:absolute;left:0;bottom:env(safe-area-inset-bottom);height:2px;background:var(--ink)}
+.h-bar::before{right:0;opacity:.12}
+.h-bar i{width:100%;transform-origin:0 0;transform:scaleX(0)}
+
+/* big line counter */
+#bignum{position:fixed;right:var(--gr);top:calc(var(--gt) + 26px);z-index:15;pointer-events:none;height:.92em;width:1.3em;overflow:hidden;
+  font:400 clamp(84px,11vw,190px)/1 var(--serif);font-style:italic;letter-spacing:-.04em;color:var(--ink);opacity:0;transition:opacity 1s}
+body.started #bignum{opacity:.075}
+#bignum span{position:absolute;right:0;top:-.04em;font-variant-numeric:tabular-nums}
+
+/* ---------- lyric ---------- */
+#lyric{position:fixed;left:0;right:0;top:50%;z-index:16;pointer-events:none;height:0;color:#fff}
+.ly{position:absolute;left:50%;top:0;width:max-content}
+.ly-in{position:relative;will-change:transform}
+.ly-in::before{content:'';position:absolute;inset:-40% -18%;z-index:-1;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(10,10,10,.34),rgba(10,10,10,.12) 55%,transparent)}
+.ly-meta{display:flex;gap:20px;margin:0 0 1.8vh .1em;font:500 10.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
+  font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.ly-meta span:first-child::before{content:'';display:inline-block;width:26px;height:1px;background:currentColor;vertical-align:middle;margin-right:12px}
+.ly-row{display:block;white-space:nowrap;font:600 var(--fs)/.92 var(--sans);letter-spacing:-.05em;text-shadow:0 2px 14px rgba(0,0,0,.28)}
+.ly.solo{text-align:center}
+.ly.solo .ly-row{line-height:.8}
+.ly.solo .ly-meta{justify-content:center;margin-left:0}
+.w{display:inline-block;overflow:hidden;vertical-align:bottom;padding:.08em .1em .18em;margin:-.08em -.1em -.18em}
+.w.s{font-family:var(--serif);font-style:italic;font-weight:400;font-size:1.16em;letter-spacing:-.02em;line-height:.8}
+.c{display:inline-block;color:rgba(255,255,255,.36);transition:color .45s ease}
+.c.on{color:#fff}
+.sp{display:inline-block;width:.24em}
+.ly-prog{position:relative;height:1px;margin-top:2.2vh;background:rgba(255,255,255,.25);overflow:hidden}
+.ly-prog i{position:absolute;inset:0;background:#fff;transform-origin:0 0;transform:scaleX(0)}
+.ly.solo .ly-prog{width:min(100%,180px);margin-left:auto;margin-right:auto}
+
+/* ---------- cursor / loupe ---------- */
+#cursor{position:fixed;top:0;left:0;z-index:50;pointer-events:none;transition:opacity .2s;display:none}
+body.has-cursor #cursor{display:block}
+#cursor.hidden{opacity:0}
+#cursor .ring{position:absolute;width:8px;height:8px;border-radius:50%;background:#191919;border:1.5px solid #191919;
+  transform:translate(-50%,-50%);transition:width .28s,height .28s,background-color .28s}
+#cursor.lens .ring{width:140px;height:140px;background:transparent}
+#cursor .label{position:absolute;top:14px;left:0;transform:translateX(-50%);opacity:0;color:#191919;
+  font:500 10px/1 var(--mono);letter-spacing:.14em;transition:opacity .25s,top .28s}
+#cursor.lens .label{opacity:1;top:82px}
+
+/* ---------- start / end card ---------- */
+#start{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px;text-align:center;
+  color:var(--ink);font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;cursor:pointer;
+  background:rgba(246,246,246,.45);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  opacity:0;pointer-events:none;transition:opacity .7s}
+#start.show{opacity:1;pointer-events:auto}
+.st-disc{position:relative;width:132px;height:132px;border-radius:50%;overflow:hidden;border:0;padding:0;cursor:pointer;
+  background:#111;box-shadow:0 20px 60px rgba(0,0,0,.18);transition:transform .5s cubic-bezier(.3,.7,.2,1.1);animation:float 4.5s ease-in-out infinite}
+@keyframes float{50%{translate:0 -6px}}
+.st-disc img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.05);transition:filter .6s}
+.st-disc:hover{transform:scale(1.06)}
+.st-disc:hover img{filter:none}
+.st-disc::before{content:'';position:absolute;inset:-1px;border-radius:50%;border:1px solid rgba(255,255,255,.6);animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.7);opacity:1}100%{transform:scale(1);opacity:0}}
+.st-disc::after{content:'';position:absolute;left:50%;top:50%;width:0;height:0;margin:-13px 0 0 -8px;
+  border-left:24px solid #fff;border-top:13px solid transparent;border-bottom:13px solid transparent;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))}
+#start h2{font:400 clamp(48px,7vw,104px)/.9 var(--serif);font-style:italic;letter-spacing:-.025em;text-transform:none}
+#start .st-sub{display:flex;gap:16px;opacity:.7}
+
+/* ---------- loader ---------- */
+#loader{position:fixed;inset:0;z-index:200;width:100%;height:100%;display:block;background:#000}
+#loader.see-through{background:transparent}
+#loader.off{display:none}
+#load-pct{position:fixed;left:var(--gl);bottom:var(--gb);z-index:201;color:#eceae4;font:500 10.5px/1 var(--mono);letter-spacing:.16em}
+#err{position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:300;display:none;padding:10px 14px;background:#141414;color:#f2f2ef;
+  font:11px/1.5 var(--mono);letter-spacing:.08em;max-width:90vw}
+
+/* portrait phones: strip sits higher, lyric goes in the empty space under it, in ink */
+body.tall #lyric{top:72%;color:var(--ink)}
+body.tall .ly-in::before{display:none}
+body.tall .ly-meta,body.tall .ly-row{text-shadow:none}
+body.tall .c{color:rgba(25,25,25,.17)}
+body.tall .c.on{color:var(--ink)}
+body.tall .ly-prog{background:rgba(25,25,25,.14)}
+body.tall .ly-prog i{background:var(--ink)}
+
+@media (width<=700px){
+  :root{--g:18px;--gt:calc(22px + env(safe-area-inset-top));--gb:calc(24px + env(safe-area-inset-bottom))}
+  .h-now b{font-size:12px}
+  .h-frame .fr-date{display:none}
+  .h-frame{gap:14px}
+  .ly-meta{gap:12px;font-size:9.5px;letter-spacing:.16em}
+  .ly-meta span:first-child::before{width:14px;margin-right:8px}
+  #bignum{top:calc(var(--gt) + 30px);font-size:clamp(84px,30vw,150px)}
+  .st-disc{width:112px;height:112px}
+}
+@media (prefers-reduced-motion: reduce){
+  .st-disc,.st-disc::before,body.playing .h-now .disc{animation:none}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="gl" aria-label="Film strip of photos"></canvas>
+
+<div id="hud">
+  <div class="h-name">MICHIE ARCHIVE</div>
+  <div class="h-rec"><span class="dot"></span><span class="tc">00:00:00:00</span></div>
+  <div class="h-now"><div class="disc"><img src="about-u/album.jpg" alt="" /></div><div><b class="t-title">About You</b><span class="t-artist">The 1975</span></div></div>
+  <div class="h-frame"><span class="fr-count">Frame 01 / 10</span><span class="fr-date">'26 09 09</span><button class="h-btn pl-play" aria-label="Play or pause">Play</button></div>
+  <div class="h-bar" role="slider" aria-label="Seek"><i></i></div>
+</div>
+
+<div id="bignum" aria-hidden="true"><span>01</span></div>
+<div id="lyric" aria-live="polite"></div>
+<div id="cursor" class="hidden"><div class="ring"></div><div class="label">LOOK</div></div>
+
+<div id="start" role="button" aria-label="Play">
+  <button class="st-disc" aria-label="Play"><img src="about-u/album.jpg" alt="" /></button>
+  <h2 class="st-title">About You</h2>
+  <div class="st-sub"><span class="st-artist">The 1975</span><span>·</span><span class="st-hint">Tap to play</span></div>
+</div>
+
+<canvas id="loader"></canvas>
+<div id="load-pct">000</div>
+<div id="err"></div>
+
+<script type="module">
+import * as THREE from 'three';
+const gsap = window.gsap;
+THREE.ColorManagement.enabled = false;
+
+/* =====================================================================
+   CONFIG
+   Lagu, foto, lirik dan waktunya dibaca dari about-u/sync-source.js
+   (salinan index.js dari michie-archive, bagian "syncData").
+   ===================================================================== */
+const CONFIG = {
+  folder: 'about-u/',
+  song: 'lagu.mp3',
+  syncFile: 'sync-source.js',
+  title: 'About You',
+  artist: 'The 1975',
+  stock: 'MICHIE 400',      // tulisan di tepi film
+  code: 'MA-26',
+  offset: 0,                // geser semua lirik + foto (detik). + = lebih cepat
+  photoLead: 0,             // foto ganti sekian detik sebelum liriknya
+  beat: true,               // pita ikut bass lagu
+  photoCenterY: .56,        // posisi crop vertikal foto (0 bawah, 1 atas)
+};
+
+const P = {
+  tau: .32, wheelFactor: .0016, maxVel: 5, magnet: 4.5,
+  twistAmp: .68, twistFreq: 2, velAmp: .16, velFreq: 2.2, restAmp: .05, beatAmp: .09,
+  fadeStart: 3.25, fadeEnd: 3.8, fadeStrength: .85, edgeDark: .12,
+  camX: .6, camY: -.45, camZ: 2.37, targetX: 0, targetY: .05, diagonal: -.1, fov: 40,
+  bwContrast: .5, satIn: .3, satOut: .85,
+  loupeR: 70, loupeSoft: 14, loupeMag: 1.35,
+  hoverLift: .05, hoverCurl: .09, hoverSpeed: 7, cursorLerp: 10,
+  beatAttack: .09, beatRelease: .5,   // seconds: how fast the bass swell rises and settles
+  rippleAmp: .045, rippleFreq: 30, rippleSpeed: 9, rippleDur: .5,
+  burstDur: 2.6, burstDist: 2.2,
+  pan: .08,          // while a photo is on screen the strip creeps from +pan to -pan
+  idleDrift: .07,    // frames per second the strip drifts when nothing is playing
+  idleAfter: 2.5,    // seconds of no input before idle drift starts
+  parallax: .1,      // camera follows pointer / phone tilt
+};
+
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const pad = (n) => String(n).padStart(2, '0');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const now = () => performance.now() / 1000;
+const hasHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
+const MOBILE = matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (hasHover) document.body.classList.add('has-cursor');
+function fail(msg) { const e = $('#err'); e.textContent = msg; e.style.display = 'block'; }
+
+/* Quality. Phones get lighter textures and geometry, and the pixel ratio
+   drops by itself if the frame rate falls (see the loop). */
+const Q = {
+  dpr: Math.min(devicePixelRatio || 1, MOBILE ? 1.75 : 2),
+  segX: MOBILE ? 48 : 72, segY: MOBILE ? 4 : 6,
+  frameTex: MOBILE ? 640 : 1024,
+  photoMax: MOBILE ? 1024 : 1600,
+  blur: !MOBILE && !reduce,
+};
+
+/* =====================================================================
+   SYNC DATA (read from the copied source file, not retyped)
+   ===================================================================== */
+async function loadSync() {
+  const res = await fetch(CONFIG.folder + CONFIG.syncFile);
+  if (!res.ok) throw new Error('sync file not found');
+  const src = await res.text();
+  const block = src.match(/syncData\s*=\s*\[([\s\S]*?)\];/);
+  if (!block) throw new Error('syncData not found');
+  const re = /\{\s*time:\s*([\d.]+)\s*,\s*text:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')\s*,\s*img:\s*["']([^"']+)["']\s*\}/g;
+  const lines = [];
+  for (const m of block[1].matchAll(re)) {
+    const raw = m[2];
+    const text = raw[0] === '"' ? JSON.parse(raw) : raw.slice(1, -1).replace(/\\'/g, "'");
+    lines.push({ t: +m[1], text, img: m[3] });
+  }
+  lines.sort((a, b) => a.t - b.t);
+  const imgs = [...new Set(lines.map((l) => l.img))];
+  for (const l of lines) l.photo = imgs.indexOf(l.img);
+  return { lines, imgs };
+}
+
+/* =====================================================================
+   SHADERS
+   ===================================================================== */
+const STRIP_COMMON = /* glsl */`
+uniform float uScroll, uVel, uTotal, uRest, uTime;
+uniform vec2  uVelWave, uTwist;
+uniform vec3  uFade;
+uniform vec2  uHoverUV, uHoverAmt, uWaveUV;
+uniform vec3  uRipple;
+uniform float uIndex, uHover, uRippleT;
+const vec2 IMG = vec2(36.0 / 38.0, 24.0 / 38.0);
+float stripS(float i) { return mod(i + uScroll + 0.5 * uTotal, uTotal) - 0.5 * uTotal; }
+// the rest wave breathes and travels along the strip even when nothing moves
+float sway() { return uRest * (1.0 + 0.35 * sin(uTime * 0.7)) + abs(uVel) * uVelWave.x; }
+float ph(float s) { return s * uVelWave.y + uScroll * 1.7 + uTime * 0.45; }
+float dz(float s) { return 0.035 * sin(s * 1.3 + uTime * 0.5); }
+vec3 curvePos(float s) { return vec3(s, sway() * sin(ph(s)), dz(s)); }
+vec3 curveTan(float s) {
+  return vec3(1.0, sway() * uVelWave.y * cos(ph(s)), 0.0455 * cos(s * 1.3 + uTime * 0.5));
+}
+mat3 curveBasis(float s) {
+  vec3 T = normalize(curveTan(s));
+  vec3 R = normalize(cross(vec3(0.0, 0.0, 1.0), T));
+  vec3 Nn = normalize(cross(T, R));
+  float tw = uTwist.x * sin(s * uTwist.y + 0.7 + 0.35 * sin(uTime * 0.21));
+  vec3 R2 = R * cos(tw) + Nn * sin(tw);
+  return mat3(T, R2, cross(T, R2));
+}
+float hoverDz(vec2 lp) {
+  vec2 c = (uHoverUV - 0.5) * IMG;
+  return uHover * (uHoverAmt.x + uHoverAmt.y * smoothstep(0.05, 0.55, distance(lp, c)));
+}
+float rippleDz(vec2 lp) {
+  if (uRippleT <= 0.0) return 0.0;
+  float d = distance(lp, (uWaveUV - 0.5) * IMG);
+  return uRipple.x * sin(d * uRipple.y - uRippleT * uRipple.z) * exp(-d * 3.5) * (1.0 - uRippleT) * smoothstep(0.0, 0.06, uRippleT);
+}
+vec3 stripWorld(out vec3 nrm, out float sC) {
+  sC = stripS(uIndex);
+  float s = sC + position.x;
+  mat3 B = curveBasis(s);
+  nrm = B[2];
+  return curvePos(s) + B * vec3(0.0, position.y, position.z + hoverDz(position.xy) + rippleDz(position.xy));
+}`;
+
+const STRIP_V = STRIP_COMMON + /* glsl */`
+varying vec2 vUv; varying float vFade, vEdge, vSC; varying vec3 vN, vV;
+void main() {
+  vec3 n; float sC;
+  vec3 wp = stripWorld(n, sC);
+  vec4 mv = modelViewMatrix * vec4(wp, 1.0);
+  gl_Position = projectionMatrix * mv;
+  vUv = uv; vSC = sC;
+  vFade = 1.0 - uFade.z * smoothstep(uFade.x, uFade.y, length(mv.xyz));
+  vEdge = smoothstep(0.55, 1.15, abs(gl_Position.x / max(gl_Position.w, 1e-4)));
+  vN = normalize(normalMatrix * n);
+  vV = normalize(-mv.xyz);
+}`;
+
+const STRIP_F = /* glsl */`
+uniform sampler2D uBase, uPhoto;
+uniform float uPhotoAspect, uBw, uEdgeDark, uHover, uTime, uCenterY, uPulse, uIndex;
+uniform vec3 uBg, uLoupe;
+uniform vec2 uCursorPx, uHoverUV, uSatIO;
+varying vec2 vUv; varying float vFade, vEdge, vSC; varying vec3 vN, vV;
+const vec2 IMG0 = vec2(1.0 / 38.0, 5.5 / 35.0);
+const vec2 IMGS = vec2(36.0 / 38.0, 24.0 / 35.0);
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+vec2 cover(vec2 uv) {
+  float pa = 1.5;
+  vec2 k = vec2(1.0);
+  if (uPhotoAspect > pa) k.x = pa / uPhotoAspect; else k.y = uPhotoAspect / pa;
+  float cy = clamp(uCenterY, k.y * 0.5, 1.0 - k.y * 0.5);
+  return vec2((uv.x - 0.5) * k.x + 0.5, (uv.y - 0.5) * k.y + cy);
+}
+// slow Ken Burns zoom + pan on the frame in the middle
+vec2 kenBurns(vec2 uv) {
+  float c = 1.0 - smoothstep(0.15, 0.9, abs(vSC));
+  float z = 1.0 + c * (0.035 + 0.035 * sin(uTime * 0.22 + uIndex * 1.7));
+  vec2 pan = c * 0.012 * vec2(sin(uTime * 0.17 + uIndex), cos(uTime * 0.13 + uIndex * 2.0));
+  return (uv - 0.5) / z + 0.5 + pan;
+}
+void main() {
+  vec4 base = texture2D(uBase, vUv);
+  if (base.a < 0.5) discard;
+  vec2 iuv = (vUv - IMG0) / IMGS;
+  float inImg = step(0.0, iuv.x) * step(iuv.x, 1.0) * step(0.0, iuv.y) * step(iuv.y, 1.0);
+  vec3 n = normalize(vN) * (gl_FrontFacing ? 1.0 : -1.0);
+  vec3 col;
+  if (inImg > 0.5) {
+    vec2 uv = kenBurns(iuv);
+    float lens = 0.0;
+    if (uHover > 0.01 && uLoupe.x > 0.0) {
+      float d = distance(gl_FragCoord.xy, uCursorPx);
+      lens = (1.0 - smoothstep(uLoupe.x - uLoupe.y, uLoupe.x, d)) * uHover;
+      uv = mix(uv, uHoverUV + (uv - uHoverUV) / uLoupe.z, lens);
+    }
+    vec3 ph = texture2D(uPhoto, cover(uv)).rgb;
+    float l = dot(ph, vec3(0.299, 0.587, 0.114));
+    l = mix(l, l * l * (3.0 - 2.0 * l), uBw);
+    float sat = max(1.0 - smoothstep(uSatIO.x, uSatIO.y, abs(vSC)), lens);
+    col = mix(vec3(l), ph, sat);
+    col *= mix(0.86, 1.0, abs(n.z));
+    col *= 1.0 + uPulse * 0.12 * (1.0 - smoothstep(0.2, 0.7, abs(vSC)));
+  } else {
+    col = base.rgb + (hash(floor(gl_FragCoord.xy)) - 0.5) * 0.03;
+    vec3 L = normalize(vec3(-0.35, 0.65, 0.7));
+    vec3 H = normalize(L + normalize(vV));
+    col += pow(max(dot(n, H), 0.0), 36.0) * 0.32 + pow(1.0 - abs(n.z), 2.0) * 0.08;
+  }
+  col *= 1.0 - uEdgeDark * vEdge;
+  col = mix(uBg, col, vFade);
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+const PICK_F = /* glsl */`
+uniform sampler2D uBase; uniform float uIndex;
+varying vec2 vUv;
+const vec2 IMG0 = vec2(1.0 / 38.0, 5.5 / 35.0);
+const vec2 IMGS = vec2(36.0 / 38.0, 24.0 / 35.0);
+void main() {
+  if (texture2D(uBase, vUv).a < 0.5) discard;
+  gl_FragColor = vec4((uIndex + 1.0) / 255.0, clamp((vUv - IMG0) / IMGS, 0.0, 1.0), 1.0);
+}`;
+
+const QUAD_V = /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
+
+const IRIS_F = /* glsl */`
+precision highp float;
+#define BLADES 8
+uniform vec2 uRes; uniform float uBody, uOpen, uRot, uSoft, uZoom, uBright, uClear, uShow, uTexAspect;
+uniform sampler2D uTex;
+varying vec2 vUv;
+void main() {
+  vec2 p = (vUv - 0.5) * uRes;
+  float rho = length(p);
+  float Rb = max(uOpen, 1.0) * 2.4 + 6.0;
+  float inside = 1e9, seam = 1e9;
+  for (int k = 0; k < BLADES; k++) {
+    float a = uRot + 6.2831853 * float(k) / float(BLADES);
+    vec2 n = vec2(cos(a), sin(a));
+    float d = Rb - length(p + n * (Rb - uOpen));
+    inside = min(inside, d);
+    if (dot(p, vec2(-n.y, n.x)) > 0.0) seam = min(seam, abs(d));
+  }
+  float aa = 1.0 + uSoft;
+  float open = smoothstep(-aa, aa, inside);
+  float body = 1.0 - smoothstep(uBody - 1.5, uBody + 1.5, rho);
+  float sheen = pow(0.5 + 0.5 * cos(atan(p.y, p.x) - 0.9 - uRot * 0.6), 3.0);
+  vec3 blade = vec3(0.055 + 0.07 * sheen * smoothstep(0.0, uBody, rho));
+  blade *= 1.0 - 0.75 * (1.0 - smoothstep(0.5, 1.4 + uSoft, seam));
+  blade += 0.09 * sheen * (1.0 - smoothstep(0.0, 1.8 + uSoft, abs(seam - 2.2)));
+  blade += 0.14 * (1.0 - smoothstep(0.0, 1.6 + uSoft, abs(inside + 1.2))) * (1.0 - open);
+  float ring = 1.0 - smoothstep(0.0, 1.5, abs(rho - uBody + 1.0));
+  vec2 uv = p / (uBody * 2.0 * uZoom) + 0.5;
+  if (uTexAspect > 1.0) uv.x = (uv.x - 0.5) / uTexAspect + 0.5; else uv.y = (uv.y - 0.5) * uTexAspect + 0.5;
+  float l = dot(texture2D(uTex, uv).rgb, vec3(0.299, 0.587, 0.114));
+  l = mix(l, l * l * (3.0 - 2.0 * l), 0.6);
+  vec3 col = mix(blade, vec3(l) * uBright, open);
+  col = mix(vec3(0.0), col, body) + ring * 0.06 * (1.0 - uClear);
+  float alpha = 1.0 - open * uClear;
+  gl_FragColor = vec4(col * alpha * uShow, alpha);
+}`;
+
+/* =====================================================================
+   TEXTURES
+   ===================================================================== */
+function loadImage(src) {
+  return new Promise((res) => { const im = new Image(); im.decoding = 'async'; im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+}
+function shrink(im) {                      // big photos are scaled down once, on the CPU
+  const m = Math.max(im.width, im.height);
+  if (m <= Q.photoMax) return im;
+  const s = Q.photoMax / m;
+  const c = document.createElement('canvas');
+  c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
+  const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+  g.drawImage(im, 0, 0, c.width, c.height);
+  return c;
+}
+function roundRect(g, x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+function frameCanvas(i) {
+  const W = Q.frameTex, H = Math.round(W * 35 / 38), mm = W / 38;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#1c1c1c'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#121212'; g.fillRect(1 * mm, 5.5 * mm, 36 * mm, 24 * mm);
+  g.globalCompositeOperation = 'destination-out';
+  const hw = 2.7 * mm, hh = 1.85 * mm;
+  for (let k = 0; k < 8; k++) {
+    const cx = (2.375 + 4.75 * k) * mm;
+    for (const cy of [3.3 * mm, H - 3.3 * mm]) { roundRect(g, cx - hw / 2, cy - hh / 2, hw, hh, .42 * mm); g.fill(); }
+  }
+  g.globalCompositeOperation = 'source-over';
+  g.fillStyle = 'rgba(226,226,220,.85)';
+  g.textBaseline = 'middle';
+  g.font = `700 ${1.3 * mm}px "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif`;
+  if ('letterSpacing' in g) g.letterSpacing = `${.12 * mm}px`;
+  g.fillText(CONFIG.code, 4 * mm, 1.25 * mm);
+  g.fillText(CONFIG.stock, 21 * mm, 1.25 * mm);
+  const n = i + 1;
+  g.fillText(String(n), 6 * mm, H - 1.25 * mm);
+  g.fillText(`${n}A`, 25 * mm, H - 1.25 * mm);
+  g.beginPath();
+  g.moveTo(18 * mm, H - 1.85 * mm); g.lineTo(19.1 * mm, H - 1.25 * mm); g.lineTo(18 * mm, H - .65 * mm); g.fill();
+  return c;
+}
+
+/* =====================================================================
+   RENDERER
+   ===================================================================== */
+const canvas = $('#gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !MOBILE || Q.dpr < 2, powerPreference: 'high-performance', stencil: false });
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+const BG = new THREE.Color(0xf6f6f6);
+renderer.setClearColor(BG, 1);
+const maxAniso = Math.min(renderer.capabilities.getMaxAnisotropy(), MOBILE ? 4 : 8);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(P.fov, 1, .05, 60);
+const group = new THREE.Group(); group.rotation.z = P.diagonal; scene.add(group);
+const size = { w: 1, h: 1, dpr: 1, f: 1, tall: false };
+const blackTex = new THREE.DataTexture(new Uint8Array([18, 18, 18, 255]), 1, 1); blackTex.needsUpdate = true;
+
+const U = {
+  uScroll: { value: 0 }, uVel: { value: 0 }, uTotal: { value: 10 }, uRest: { value: P.restAmp },
+  uVelWave: { value: new THREE.Vector2(P.velAmp, P.velFreq) },
+  uTwist: { value: new THREE.Vector2(P.twistAmp, P.twistFreq) },
+  uFade: { value: new THREE.Vector3() },
+  uHoverUV: { value: new THREE.Vector2(.5, .5) },
+  uHoverAmt: { value: new THREE.Vector2(P.hoverLift, P.hoverCurl) },
+  uWaveUV: { value: new THREE.Vector2(.5, .5) },
+  uRipple: { value: new THREE.Vector3(P.rippleAmp, P.rippleFreq, P.rippleSpeed) },
+  uBg: { value: BG.clone() }, uEdgeDark: { value: P.edgeDark }, uBw: { value: P.bwContrast },
+  uCursorPx: { value: new THREE.Vector2(-1e4, -1e4) },
+  uLoupe: { value: new THREE.Vector3(0, P.loupeSoft, P.loupeMag) },
+  uSatIO: { value: new THREE.Vector2(P.satIn, P.satOut) },
+  uTime: { value: 0 }, uCenterY: { value: CONFIG.photoCenterY }, uPulse: { value: 0 },
+};
+
+const geo = new THREE.PlaneGeometry(1, 35 / 38, Q.segX, Q.segY);
+let frames = [];
+let N = 10;
+function buildStrip(count) {
+  N = count; U.uTotal.value = N;
+  for (let i = 0; i < N; i++) {
+    const base = new THREE.CanvasTexture(frameCanvas(i));
+    base.anisotropy = maxAniso;
+    const own = { uIndex: { value: i }, uHover: { value: 0 }, uRippleT: { value: 0 }, uBase: { value: base }, uPhoto: { value: blackTex }, uPhotoAspect: { value: 1.5 } };
+    const mat = new THREE.ShaderMaterial({ uniforms: { ...U, ...own }, vertexShader: STRIP_V, fragmentShader: STRIP_F, side: THREE.DoubleSide });
+    const pick = hasHover ? new THREE.ShaderMaterial({ uniforms: { ...U, ...own }, vertexShader: STRIP_V, fragmentShader: PICK_F, side: THREE.DoubleSide }) : null;
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.frustumCulled = false;
+    group.add(mesh);
+    frames.push({ mesh, mat, pick, u: own, tex: null, aspect: 1.5 });
+  }
+}
+const wrap = (i) => ((i % N) + N) % N;
+
+/* ---------- loader renderer ---------- */
+const lc = $('#loader');
+const lr = new THREE.WebGLRenderer({ canvas: lc, alpha: true, antialias: false, stencil: false, depth: false });
+lr.outputColorSpace = THREE.LinearSRGBColorSpace;
+lr.setClearColor(0x000000, 0);
+const lScene = new THREE.Scene(), lCam = new THREE.Camera();
+const LU = {
+  uRes: { value: new THREE.Vector2(1, 1) }, uBody: { value: 0 }, uOpen: { value: 0 }, uRot: { value: 0 }, uSoft: { value: 0 },
+  uZoom: { value: 1 }, uBright: { value: 1 }, uClear: { value: 0 }, uShow: { value: 0 }, uTex: { value: blackTex }, uTexAspect: { value: 1 },
+};
+lScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms: LU, vertexShader: QUAD_V, fragmentShader: IRIS_F, blending: THREE.NoBlending, depthTest: false })));
+const L = { body: .3, open: 0, rot: 0, show: 0, bright: 1, zoom: 1.05, clear: 0 };
+let loaderOn = true, lastOpenPx = 0;
+const bigBody = () => Math.hypot(size.w, size.h) / Math.min(size.w, size.h) * .62;
+
+function resize() {
+  const w = innerWidth, h = innerHeight, dpr = Q.dpr;
+  Object.assign(size, { w, h, dpr });
+  renderer.setPixelRatio(dpr); renderer.setSize(w, h, false);
+  const ldpr = Math.min(dpr, MOBILE ? 1.25 : 1.5);
+  lr.setPixelRatio(ldpr); lr.setSize(w, h, false);
+  const aspect = w / h;
+  size.tall = aspect < .9;
+  document.body.classList.toggle('tall', size.tall);
+  // portrait: step back less so the frames stay big and run off the screen edges
+  size.f = size.tall ? clamp(.8 / aspect, 1, 1.75) : clamp(1.3 / aspect, 1, 2.15);
+  camera.aspect = aspect;
+  camera.updateProjectionMatrix();
+  placeCamera();
+  U.uFade.value.set(P.fadeStart * size.f, P.fadeEnd * size.f, P.fadeStrength);
+  LU.uRes.value.set(w * ldpr, h * ldpr);
+  refitLyric();
+}
+
+/* camera floats a little and leans toward the pointer or the phone's tilt */
+const par = { x: 0, y: 0, tx: 0, ty: 0, base: null };
+function placeCamera() {
+  const t = U.uTime.value, f = size.f, m = reduce ? 0 : 1;
+  camera.position.set(
+    (P.camX + m * (Math.sin(t * .31) * .035 + par.x * P.parallax)) * f,
+    (P.camY + m * (Math.cos(t * .23) * .03 + par.y * P.parallax * .7)) * f,
+    P.camZ * f);
+  camera.lookAt(P.targetX, P.targetY - (size.tall ? .085 * P.camZ * f : 0), 0);
+}
+addEventListener('deviceorientation', (e) => {
+  if (e.gamma == null || e.beta == null) return;
+  const b = par.base;
+  // a held-upright phone can flip gamma by ~180°: treat any big jump as a new rest pose
+  if (!b || Math.abs(e.gamma - b.lg) > 25 || Math.abs(e.beta - b.lb) > 25) {
+    par.base = { g: e.gamma, b: e.beta, lg: e.gamma, lb: e.beta };
+    return;
+  }
+  b.lg = e.gamma; b.lb = e.beta;
+  b.g += (e.gamma - b.g) * .01;            // rest pose slowly follows how the phone is held
+  b.b += (e.beta - b.b) * .01;
+  const dz = (v) => (Math.abs(v) < 1.5 ? 0 : v - Math.sign(v) * 1.5);   // ignore hand tremor
+  par.tx = clamp(dz(e.gamma - b.g) / 30, -1, 1) * .6;
+  par.ty = clamp(dz(e.beta - b.b) / 30, -1, 1) * .6;
+});
+
+/* =====================================================================
+   SCROLL / INPUT
+   ===================================================================== */
+const S = { current: 0, target: 0, last: 0, burst: true };
+const pointer = { x: -1e4, y: -1e4, sx: -1e4, sy: -1e4, inside: false };
+let dragging = false, dragX = 0, downX = 0, downY = 0, dragVel = 0;
+const centerIndex = () => wrap(Math.round(-S.current));
+const centerTarget = (i) => -i + N * Math.round((S.current + i) / N);
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (PL.playing) return;                    // the song drives the strip while playing
+  const d = (Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX) * (e.deltaMode === 1 ? 16 : 1);
+  S.target -= d * P.wheelFactor; S.last = now(); S.burst = false;
+}, { passive: false });
+canvas.addEventListener('pointermove', (e) => {
+  pointer.x = e.clientX; pointer.y = e.clientY; pointer.inside = true;
+  if (pointer.sx < -1e3) { pointer.sx = e.clientX; pointer.sy = e.clientY; }
+  if (hasHover) { par.tx = e.clientX / size.w - .5; par.ty = -(e.clientY / size.h - .5); }
+  if (dragging) {
+    const d = (e.clientX - dragX) / size.w * 2.4 * size.f; dragX = e.clientX;
+    S.target += d; dragVel = d; S.last = now(); S.burst = false;
+  }
+});
+canvas.addEventListener('pointerleave', () => { pointer.inside = false; });
+canvas.addEventListener('pointerdown', (e) => {
+  downX = dragX = e.clientX; downY = e.clientY;
+  if (!PL.playing) { dragging = true; canvas.setPointerCapture(e.pointerId); }
+});
+const endDrag = () => { if (dragging) { dragging = false; S.target += dragVel * 6; dragVel = 0; S.last = now(); } };
+canvas.addEventListener('pointercancel', endDrag);
+canvas.addEventListener('pointerup', (e) => {
+  endDrag();
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) < (MOBILE ? 12 : 6) && PL.started) {
+    const hit = pickAt(e.clientX, e.clientY);
+    if (hit) ripple(hit.id, hit.u, hit.v);
+    togglePlay();
+  }
+});
+addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); if (PL.started) togglePlay(); else startPlayback(); }
+  if (PL.playing) return;
+  if (e.key === 'ArrowRight') { S.target = Math.round(S.target) - 1; S.last = now(); }
+  if (e.key === 'ArrowLeft') { S.target = Math.round(S.target) + 1; S.last = now(); }
+});
+
+const pickRT = new THREE.WebGLRenderTarget(1, 1);
+const pickBuf = new Uint8Array(4);
+const pickMats = () => frames.map((f) => f.pick || (f.pick = new THREE.ShaderMaterial({ uniforms: f.mat.uniforms, vertexShader: STRIP_V, fragmentShader: PICK_F, side: THREE.DoubleSide })));
+function pickAt(x, y) {
+  if (!frames.length) return null;
+  const mats = pickMats();
+  camera.setViewOffset(size.w, size.h, Math.floor(x), Math.floor(y), 1, 1);
+  frames.forEach((f, i) => { f.mesh.material = mats[i]; });
+  renderer.setRenderTarget(pickRT);
+  renderer.setClearColor(0x000000, 1); renderer.clear();
+  renderer.render(scene, camera);
+  renderer.readRenderTargetPixels(pickRT, 0, 0, 1, 1, pickBuf);
+  renderer.setRenderTarget(null);
+  renderer.setClearColor(BG, 1);
+  for (const f of frames) f.mesh.material = f.mat;
+  camera.clearViewOffset();
+  const id = pickBuf[0] - 1;
+  return id >= 0 && id < N ? { id, u: pickBuf[1] / 255, v: pickBuf[2] / 255 } : null;
+}
+function ripple(i, u, v) {
+  U.uWaveUV.value.set(u, v);
+  const f = frames[i];
+  gsap.fromTo(f.u.uRippleT, { value: 0 }, { value: 1, duration: P.rippleDur, ease: 'none', onComplete: () => { f.u.uRippleT.value = 0; } });
+}
+
+/* =====================================================================
+   LYRIC TYPOGRAPHY
+   Short lines (1-2 words) → one huge italic serif word.
+   Longer lines → 2-4 staggered rows, sans with the closing word in italic serif.
+   Letters rise in one by one, then fill from dim to white as the line is sung,
+   with a thin progress rule underneath. The block floats gently while it waits.
+   A line repeated right after itself leaves an echo of the previous one behind.
+   ===================================================================== */
+const lyricEl = $('#lyric');
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+let curLy = null;
+let ghosts = [];
+let repeatCount = 1;
+const portrait = () => size.tall;
+
+function splitRows(words, n) {
+  const total = words.join(' ').length;
+  const target = total / n;
+  const rows = [[]];
+  let len = 0;
+  words.forEach((w, i) => {
+    const left = words.length - i;
+    if (rows.length < n && rows[rows.length - 1].length && (len + w.length > target * 1.08) && left >= n - rows.length) {
+      rows.push([]); len = 0;
+    }
+    rows[rows.length - 1].push(w); len += w.length + 1;
+  });
+  return rows;
+}
+function lineHTML(text, meta) {
+  const words = text.trim().split(/\s+/);
+  const total = text.trim().length;
+  const solo = words.length <= 2 && total <= 14;
+  const tall = portrait();
+  const n = solo ? 1 : tall ? (total > 40 ? 4 : total > 16 ? 3 : 2) : (total > 34 ? 3 : 2);
+  const rows = solo ? [words] : splitRows(words, Math.min(n, words.length));
+  const fs = solo
+    ? (tall ? 'clamp(72px, 26vw, 200px)' : 'clamp(84px, 15vw, 240px)')
+    : tall
+      ? `clamp(30px, ${[0, 0, 12, 10.5, 9.5][rows.length]}vw, 72px)`
+      : rows.length >= 3 ? 'clamp(34px, 5.2vw, 100px)' : 'clamp(40px, 6.4vw, 124px)';
+  const indents = tall ? ['0em', '.8em', '.3em', '1.1em'] : ['0em', '1.4em', '.55em', '1.8em'];
+  let ci = 0;
+  const rowHTML = rows.map((row, r) => {
+    const ws = row.map((w, k) => {
+      const isLast = r === rows.length - 1 && k === row.length - 1;
+      const serif = solo || isLast || (rows.length >= 3 && r === 0 && k === row.length - 1 && row.length > 1);
+      const chars = [...w].map((ch) => `<span class="c">${esc(ch)}</span>`).join('');
+      ci += [...w].length;
+      return `<span class="w${serif ? ' s' : ''}">${chars}</span>`;
+    }).join('<span class="sp"></span>');
+    return `<span class="ly-row" style="padding-left:${solo ? 0 : indents[r]}">${ws}</span>`;
+  }).join('');
+  return {
+    html: `<div class="ly${solo ? ' solo' : ''}" style="--fs:${fs}"><div class="ly-in"><div class="ly-meta">${meta.map((m) => `<span>${m}</span>`).join('')}</div>${rowHTML}<div class="ly-prog"><i></i></div></div></div>`,
+    count: ci, fs,
+  };
+}
+function fitLyric(el) {                       // shrink rows that would run off a narrow screen
+  const maxW = innerWidth * (portrait() ? .9 : .84);
+  const w = el.offsetWidth;
+  if (w <= maxW) return;
+  const fs = parseFloat(getComputedStyle(el.querySelector('.ly-row')).fontSize);
+  el.style.setProperty('--fs', `${Math.max(20, fs * maxW / w)}px`);
+}
+function refitLyric() {
+  if (!curLy) return;
+  curLy.el.style.setProperty('--fs', curLy.fs);
+  fitLyric(curLy.el);
+}
+function removeLy(el) { gsap.killTweensOf(el.querySelector('.ly-in')); el.remove(); }
+function exitLine(el, toGhost) {
+  if (toGhost) {
+    ghosts.push(el);
+    const depth = ghosts.length;
+    gsap.to(el, { opacity: .16 / depth, scale: 1 + .07 * depth, y: -18 * depth, ...(Q.blur ? { filter: 'blur(2px)' } : {}), duration: .9, ease: 'power3.out' });
+    gsap.to(el.querySelectorAll('.ly-meta, .ly-prog'), { opacity: 0, duration: .3 });
+    return;
+  }
+  gsap.to(el.querySelectorAll('.ly-meta, .ly-prog'), { opacity: 0, duration: .3 });
+  gsap.to(el.querySelectorAll('.c'), {
+    yPercent: -110, opacity: 0, ...(Q.blur ? { filter: 'blur(8px)' } : {}),
+    duration: .5, ease: 'power2.in', stagger: .006, overwrite: true, onComplete: () => removeLy(el),
+  });
+}
+function clearGhosts() {
+  for (const g of ghosts) gsap.to(g, { opacity: 0, duration: .5, overwrite: true, onComplete: () => removeLy(g) });
+  ghosts = [];
+}
+
+const bigEl = $('#bignum');
+function setBig(txt) {
+  const old = bigEl.querySelector('span:last-child');
+  if (old && old.textContent === txt) return;
+  const s = document.createElement('span'); s.textContent = txt; bigEl.appendChild(s);
+  gsap.fromTo(s, { yPercent: 100 }, { yPercent: 0, duration: 1.1, ease: 'expo.out' });
+  if (old) gsap.to(old, { yPercent: -100, duration: .9, ease: 'expo.out', onComplete: () => old.remove() });
+}
+
+function showLine(idx) {
+  const line = PL.lines[idx];
+  const prev = curLy;
+  const repeat = !!(prev && line && prev.text === line.text);
+  repeatCount = repeat ? repeatCount + 1 : 1;
+  if (prev) exitLine(prev.el, repeat);
+  if (!repeat) clearGhosts();
+  setBig(pad(Math.max(idx, 0) + 1));
+  if (!line || !line.text) { curLy = null; return; }
+  const meta = [`Line ${pad(idx + 1)} / ${pad(PL.lines.length)}`, fmtTC(line.t), `Frame ${line.photo + 1}A`];
+  if (repeatCount > 1) meta.push(`×${repeatCount}`);
+  const { html, count, fs } = lineHTML(line.text, meta);
+  lyricEl.insertAdjacentHTML('beforeend', html);
+  const el = lyricEl.lastElementChild;
+  fitLyric(el);
+  gsap.set(el, { xPercent: -50, yPercent: -50 });
+  const next = PL.lines[idx + 1];
+  const dur = (next ? next.t : songDur()) - line.t;
+  const inner = el.querySelector('.ly-in');
+  curLy = { el, text: line.text, chars: [...el.querySelectorAll('.c')], prog: el.querySelector('.ly-prog i'), start: line.t, dur, fillDur: clamp(dur * .72, .5, 6), lit: 0, count, fs };
+
+  const chars = el.querySelectorAll('.c');
+  const delay = prev ? .16 : 0;
+  gsap.fromTo(chars,
+    { yPercent: 115, rotate: 7, opacity: 0, ...(Q.blur ? { filter: 'blur(10px)' } : {}) },
+    { yPercent: 0, rotate: 0, opacity: 1, ...(Q.blur ? { filter: 'blur(0px)', clearProps: 'filter' } : {}), duration: 1.05, ease: 'expo.out', stagger: Math.min(.03, .9 / count), delay });
+  gsap.fromTo(el.querySelector('.ly-meta'), { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: .8, ease: 'power3.out', delay: delay + .2 });
+  gsap.fromTo(el.querySelector('.ly-prog'), { opacity: 0 }, { opacity: 1, duration: .6, delay: delay + .3 });
+  if (!reduce) {
+    // soft float so the text never sits dead still (translate only: no re-raster "pop")
+    gsap.fromTo(inner, { y: 4 }, { y: -6, duration: 2.8, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+  }
+}
+function fillLyric(t) {                       // karaoke fill, one character at a time
+  if (!curLy) return;
+  const p = clamp((t - curLy.start) / curLy.fillDur, 0, 1);
+  curLy.prog.style.transform = `scaleX(${clamp((t - curLy.start) / Math.max(curLy.dur, .1), 0, 1)})`;
+  const lit = Math.round(p * curLy.count);
+  if (lit === curLy.lit) return;
+  for (let i = Math.min(lit, curLy.lit); i < Math.max(lit, curLy.lit); i++) curLy.chars[i].classList.toggle('on', i < lit);
+  curLy.lit = lit;
+}
+
+/* =====================================================================
+   PLAYER
+   ===================================================================== */
+const PL = { lines: [], audio: null, ctx: null, an: null, buf: null, started: false, playing: false, silent: false, t0: 0, tPause: 0,
+  curText: -2, curPhoto: -2, energy: 0, ended: false, seg: null, lock: null };
+const startEl = $('#start'), playBtn = $('.pl-play'), barEl = $('.h-bar'), barFill = $('.h-bar i');
+const tcEl = $('.tc'), frEl = $('.fr-count');
+const fmtTC = (s) => { s = Math.max(0, s); return `${pad(Math.floor(s / 60))}:${(s % 60).toFixed(2).padStart(5, '0')}`; };
+const rawTime = () => PL.silent ? (PL.playing ? now() - PL.t0 : PL.tPause) : (PL.audio ? PL.audio.currentTime : 0);
+const songTime = () => rawTime() + CONFIG.offset;
+const songDur = () => {
+  const d = PL.audio && PL.audio.duration;
+  if (!PL.silent && d && isFinite(d)) return d;
+  return (PL.lines.length ? PL.lines[PL.lines.length - 1].t : 0) + 6;
+};
+const lineAt = (t) => { let i = -1; for (let k = 0; k < PL.lines.length; k++) if (PL.lines[k].t <= t) i = k; return i; };
+
+function goSilent() {
+  if (PL.silent) return;
+  const t = PL.audio ? PL.audio.currentTime || 0 : 0;
+  PL.silent = true; PL.tPause = t; PL.t0 = now() - t;
+  fail('Lagu tidak bisa diputar, pakai timer tanpa suara.');
+}
+function initAudio() {
+  const a = new Audio();
+  a.preload = 'auto'; a.src = CONFIG.folder + CONFIG.song;
+  a.setAttribute('playsinline', '');
+  PL.audio = a;
+  a.addEventListener('error', () => { const was = PL.playing; goSilent(); if (was) PL.t0 = now() - PL.tPause; });
+  a.addEventListener('ended', onEnded);
+  try {
+    PL.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = PL.ctx.createMediaElementSource(a);
+    PL.an = PL.ctx.createAnalyser(); PL.an.fftSize = 256; PL.an.smoothingTimeConstant = .6;
+    PL.buf = new Uint8Array(PL.an.frequencyBinCount);
+    src.connect(PL.an); PL.an.connect(PL.ctx.destination);
+  } catch (e) { PL.an = null; }
+  setupMediaSession();
+}
+function setupMediaSession() {               // title + controls on the Android lock screen / notification
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: CONFIG.title, artist: CONFIG.artist, album: 'Michie Archive',
+      artwork: [{ src: CONFIG.folder + 'album.jpg', sizes: '640x640', type: 'image/jpeg' }],
+    });
+    navigator.mediaSession.setActionHandler('play', () => play());
+    navigator.mediaSession.setActionHandler('pause', () => pause());
+    navigator.mediaSession.setActionHandler('seekto', (d) => seek(d.seekTime));
+  } catch (e) { /* not supported */ }
+}
+async function keepAwake(on) {               // stop the phone screen from dimming mid-song
+  try {
+    if (on && 'wakeLock' in navigator && !PL.lock) { PL.lock = await navigator.wakeLock.request('screen'); PL.lock.addEventListener('release', () => { PL.lock = null; }); }
+    if (!on && PL.lock) { await PL.lock.release(); PL.lock = null; }
+  } catch (e) { PL.lock = null; }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && PL.playing) keepAwake(true); });
+
+async function play() {
+  if (PL.ended) { seek(0); PL.ended = false; }
+  if (!PL.silent) { try { if (PL.ctx) await PL.ctx.resume(); await PL.audio.play(); } catch (e) { goSilent(); } }
+  if (PL.silent) PL.t0 = now() - PL.tPause;
+  PL.playing = true; S.burst = false;
+  gsap.killTweensOf(S);                     // stop the intro slide fighting the song
+  PL.curPhoto = -2;                        // re-centre on the current photo
+  playBtn.textContent = 'Pause';
+  document.body.classList.add('playing');
+  keepAwake(true);
+}
+function pause() {
+  if (PL.silent) PL.tPause = now() - PL.t0; else if (PL.audio) PL.audio.pause();
+  PL.playing = false;
+  playBtn.textContent = 'Play';
+  document.body.classList.remove('playing');
+  S.last = now();
+  keepAwake(false);
+}
+const togglePlay = () => (PL.playing ? pause() : play());
+function seek(sec) {
+  sec = clamp(sec, 0, songDur());
+  if (PL.silent) { PL.tPause = sec; PL.t0 = now() - sec; } else if (PL.audio) PL.audio.currentTime = sec;
+  PL.curText = PL.curPhoto = -2;
+}
+function onEnded() {
+  pause(); PL.ended = true;
+  setTimeout(() => {
+    if (!PL.ended) return;
+    $('.st-hint').textContent = 'Play again';
+    startEl.classList.add('show');
+  }, 2600);
+}
+async function startPlayback() {
+  startEl.classList.remove('show');
+  document.body.classList.add('started');
+  if (!PL.started) {
+    PL.started = true; initAudio();
+    // iOS asks before giving tilt data; Android does not
+    if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().catch(() => {});
+    }
+  }
+  play();
+}
+startEl.addEventListener('click', startPlayback);
+playBtn.addEventListener('click', (e) => { e.stopPropagation(); PL.started ? togglePlay() : startPlayback(); });
+barEl.addEventListener('click', (e) => { if (!PL.started) return; seek(e.clientX / size.w * songDur()); });
+
+function photoSegment(ip) {                  // how long the current photo stays on screen
+  const photo = PL.lines[ip].photo;
+  let end = songDur();
+  for (let k = ip + 1; k < PL.lines.length; k++) if (PL.lines[k].photo !== photo) { end = PL.lines[k].t - CONFIG.photoLead; break; }
+  let start = PL.lines[ip].t - CONFIG.photoLead;
+  for (let k = ip - 1; k >= 0 && PL.lines[k].photo === photo; k--) start = PL.lines[k].t - CONFIG.photoLead;
+  return { base: centerTarget(photo), start, end };
+}
+
+function segTarget(t) {
+  const sg = PL.seg;
+  const pr = clamp((t - sg.start) / Math.max(sg.end - sg.start, .1), 0, 1);
+  return sg.base + P.pan - 2 * P.pan * pr;
+}
+// audio.currentTime advances in uneven steps in some browsers; run our own
+// smooth clock and only nudge it toward the audio (snap after a seek).
+function smoothClock() {
+  const a = rawTime(), n = now();
+  if (!PL.playing || PL.silent || PL.clk == null) { PL.clk = a; PL.clkAt = n; return a; }
+  const pred = PL.clk + (n - PL.clkAt);
+  PL.clk = Math.abs(a - pred) > .15 ? a : pred + (a - pred) * .06;
+  PL.clkAt = n;
+  return PL.clk;
+}
+function playerUpdate(dt) {
+  if (!PL.started) return;
+  if (PL.silent && PL.playing && now() - PL.t0 > songDur()) onEnded();
+  const t = smoothClock() + CONFIG.offset;
+  const it = lineAt(t), ip = lineAt(t + CONFIG.photoLead);
+  if (ip !== PL.curPhoto) {
+    const prevPhoto = PL.curPhoto >= 0 ? PL.lines[PL.curPhoto].photo : -1;
+    PL.curPhoto = ip;
+    if (ip >= 0 && (PL.lines[ip].photo !== prevPhoto || !PL.seg)) PL.seg = photoSegment(ip);
+    if (ip >= 0) { S.burst = false; gsap.killTweensOf(S); S.target = segTarget(t); S.last = now(); }
+  }
+  // the strip creeps slowly across the photo instead of freezing on it
+  if (PL.playing && PL.seg && ip >= 0) { S.target = segTarget(t); S.last = now(); }
+  if (it !== PL.curText) { PL.curText = it; showLine(it); }
+  fillLyric(t);
+  const raw = rawTime(), dur = songDur();
+  barFill.style.transform = `scaleX(${clamp(raw / Math.max(dur, 1e-3), 0, 1)})`;
+  const fr = Math.floor((raw % 1) * 25);
+  tcEl.textContent = `00:${pad(Math.floor(raw / 60))}:${pad(Math.floor(raw % 60))}:${pad(fr)}`;
+
+  let e = 0;
+  if (CONFIG.beat && PL.an && PL.playing && !PL.silent) {
+    PL.an.getByteFrequencyData(PL.buf);
+    let s = 0; for (let k = 1; k <= 8; k++) s += PL.buf[k];
+    e = Math.pow(s / (8 * 255), 2.6);
+  }
+  // soft envelope: the strip swells with the bass instead of jerking on every kick
+  const tc = e > PL.energy ? P.beatAttack : P.beatRelease;
+  PL.energy += (e - PL.energy) * (1 - Math.exp(-dt / tc));
+}
+
+/* =====================================================================
+   LOADER / INTRO
+   ===================================================================== */
+function renderLoader(dt) {
+  const m = Math.min(size.w, size.h) * lr.getPixelRatio();
+  const body = L.body * m, open = L.open * body;
+  LU.uSoft.value = clamp(Math.abs(open - lastOpenPx) / Math.max(dt, 1e-3) * .0025, 0, 6);
+  lastOpenPx = open;
+  LU.uBody.value = body; LU.uOpen.value = open; LU.uRot.value = L.rot;
+  LU.uShow.value = L.show; LU.uBright.value = L.bright; LU.uZoom.value = L.zoom; LU.uClear.value = L.clear;
+  lr.render(lScene, lCam);
+}
+function loaderTex(f) { LU.uTex.value = f.tex; LU.uTexAspect.value = f.aspect; }
+
+async function intro() {
+  const pct = $('#load-pct');
+  let data;
+  try { data = await loadSync(); } catch (e) { fail('Gagal membaca about-u/sync-source.js. Jalankan lewat server lokal.'); return; }
+  PL.lines = data.lines;
+  // wait (briefly) for the web fonts so the film-edge text and lyrics measure right
+  if (document.fonts) await Promise.race([document.fonts.ready, sleep(2500)]);
+  buildStrip(data.imgs.length);
+  let loaded = 0;
+  const ready = data.imgs.map((name, i) => loadImage(CONFIG.folder + name).then((im) => {
+    if (im) {
+      const tex = new THREE.Texture(shrink(im)); tex.anisotropy = maxAniso; tex.needsUpdate = true;
+      const f = frames[i]; f.tex = tex; f.aspect = im.width / im.height;
+      f.u.uPhoto.value = tex; f.u.uPhotoAspect.value = f.aspect;
+      renderer.initTexture(tex);             // upload now, not on the first visible frame
+    }
+    loaded++;
+    pct.textContent = String(Math.round(loaded / data.imgs.length * 100)).padStart(3, '0');
+    return frames[i];
+  }));
+  const all = Promise.all(ready);
+  let allDone = false; all.then(() => { allDone = true; });
+
+  const first = await Promise.race(ready);
+  if (first.tex) loaderTex(first);
+  gsap.to(L, { show: 1, duration: .8, ease: 'power2.out' });
+  await gsap.to(L, { open: .58, rot: .6, duration: reduce ? .3 : 1.1, ease: 'power3.out' });
+  const t0 = now();
+  let k = 0;
+  while (!allDone || now() - t0 < (reduce ? .3 : 2.4)) {
+    await sleep(240);
+    const have = frames.filter((f) => f.tex);
+    if (!have.length) continue;
+    await gsap.to(L, { open: .1, rot: L.rot + .35, duration: .16, ease: 'power2.in' });
+    k = (k + 1) % have.length; loaderTex(have[k]);
+    L.bright = 1.3; gsap.to(L, { bright: 1, duration: .45, ease: 'power2.out' });
+    await gsap.to(L, { open: .6, rot: L.rot + .35, duration: .34, ease: 'power3.out' });
+  }
+  renderer.compile(scene, camera);
+  await gsap.to(L, { open: .02, rot: L.rot + .3, duration: .2, ease: 'power2.in' });
+  L.clear = 1; lc.classList.add('see-through');
+  gsap.to(pct, { opacity: 0, duration: .3 });
+  document.body.classList.add('ready');
+  S.current = S.target = P.burstDist; S.burst = true;
+  gsap.to(S, { target: 0, duration: reduce ? .01 : P.burstDur, ease: 'power3.out', onComplete: () => { S.burst = false; S.last = now(); } });
+  await gsap.to(L, { open: 1, body: bigBody(), rot: L.rot + .9, duration: 1.3, ease: 'power3.inOut' });
+  loaderOn = false; lc.classList.add('off'); pct.remove();
+  lr.dispose(); lr.forceContextLoss();       // free the second WebGL context on phones
+  startEl.classList.add('show');
+}
+
+/* =====================================================================
+   LOOP
+   ===================================================================== */
+const cursorEl = $('#cursor');
+let shownFrame = -1, lastT = performance.now();
+const perf = { acc: 0, n: 0, t0: now() };
+function adaptQuality(raw) {                 // lower the pixel ratio if the phone can't keep up
+  if (loaderOn || document.hidden || raw > .25) return;
+  perf.acc += raw; perf.n++;
+  if (now() - perf.t0 < 2) return;
+  const avg = perf.acc / Math.max(perf.n, 1);
+  // only step down after two slow windows in a row, so one hiccup doesn't cause a visible resize
+  perf.slow = perf.n > 30 && avg > 1 / 45 ? (perf.slow || 0) + 1 : 0;
+  if (perf.slow >= 2 && Q.dpr > 1.01) { Q.dpr = Math.max(1, Q.dpr - .25); perf.slow = 0; resize(); }
+  perf.acc = 0; perf.n = 0; perf.t0 = now();
+}
+function loop() {
+  requestAnimationFrame(loop);
+  const tNow = performance.now();
+  const raw = (tNow - lastT) / 1000; lastT = tNow;
+  const dt = Math.min(raw, 1 / 20);
+  adaptQuality(raw);
+  U.uTime.value += dt;
+  playerUpdate(dt);
+  U.uRest.value = P.restAmp + PL.energy * P.beatAmp;
+  U.uPulse.value = PL.energy * .6;
+
+  const idle = now() - S.last;
+  if (!dragging && !S.burst && !PL.playing) {
+    if (PL.started && !PL.ended && PL.curPhoto >= 0) {
+      // paused mid-song: one soft pull back to the lyric's photo, then a slow sway.
+      // (no magnet here, so two motions never fight each other)
+      if (idle > 1.2 && !reduce) {
+        const ease = Math.min(1, (idle - 1.2) / 2.5);
+        const goal = centerTarget(PL.lines[PL.curPhoto].photo) + Math.sin(U.uTime.value * .3) * .08;
+        S.target += (goal - S.target) * (1 - Math.exp(-dt * .9 * ease));
+      }
+    } else if (idle > P.idleAfter && !reduce) S.target -= dt * P.idleDrift * Math.min(1, (idle - P.idleAfter) / 2);
+    else if (idle > .4) S.target += (Math.round(S.target) - S.target) * (1 - Math.exp(-dt * P.magnet));
+  }
+  const prev = S.current;
+  S.current += (S.target - S.current) * (1 - Math.exp(-dt / P.tau));
+  const v = clamp((S.current - prev) / Math.max(dt, 1e-4), -P.maxVel, P.maxVel);
+  U.uVel.value += (v - U.uVel.value) * (1 - Math.exp(-dt * 8));
+  U.uScroll.value = S.current;
+
+  const kp = 1 - Math.exp(-dt * (MOBILE ? 1.2 : 2.5));
+  par.x += (par.tx - par.x) * kp; par.y += (par.ty - par.y) * kp;
+  placeCamera();
+
+  if (frames.length) {
+    const ci = centerIndex();
+    if (ci !== shownFrame) { shownFrame = ci; frEl.textContent = `Frame ${pad(ci + 1)} / ${pad(N)}`; }
+    if (hasHover) {
+      const kc = 1 - Math.exp(-dt * P.cursorLerp);
+      pointer.sx += (pointer.x - pointer.sx) * kc; pointer.sy += (pointer.y - pointer.sy) * kc;
+      const hit = pointer.inside && !dragging && !loaderOn ? pickAt(pointer.sx, pointer.sy) : null;
+      const hovered = hit ? hit.id : -1;
+      if (hit) {
+        const kh = 1 - Math.exp(-dt * 14);
+        U.uHoverUV.value.x += (hit.u - U.uHoverUV.value.x) * kh;
+        U.uHoverUV.value.y += (hit.v - U.uHoverUV.value.y) * kh;
+      }
+      const kHover = 1 - Math.exp(-dt * P.hoverSpeed);
+      for (const f of frames) f.u.uHover.value += ((f.u.uIndex.value === hovered ? 1 : 0) - f.u.uHover.value) * kHover;
+      U.uCursorPx.value.set(pointer.sx * size.dpr, (size.h - pointer.sy) * size.dpr);
+      U.uLoupe.value.set(P.loupeR * size.dpr, P.loupeSoft * size.dpr, P.loupeMag);
+      cursorEl.style.transform = `translate3d(${pointer.sx}px,${pointer.sy}px,0)`;
+      cursorEl.classList.toggle('lens', hovered >= 0);
+      cursorEl.classList.toggle('hidden', !pointer.inside);
+    }
+  }
+  renderer.render(scene, camera);
+  if (loaderOn) renderLoader(dt);
+}
+
+$('.t-title').textContent = $('.st-title').textContent = CONFIG.title;
+$('.t-artist').textContent = $('.st-artist').textContent = CONFIG.artist;
+let rzTimer = 0;
+addEventListener('resize', () => { clearTimeout(rzTimer); rzTimer = setTimeout(resize, 80); });
+addEventListener('orientationchange', () => setTimeout(resize, 250));
+resize();
+loop();
+intro();
+</script>
+</body>
+</html>
