@@ -1,0 +1,21 @@
+{
+  "buildCommand": "echo \"dist is built locally with npm run dist\"",
+  "installCommand": "echo skip",
+  "outputDirectory": "dist",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noai, noimageai" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "same-origin" }
+      ]
+    },
+    {
+      "source": "/about-u/(.*)",
+      "headers": [
+        { "key": "Cross-Origin-Resource-Policy", "value": "same-origin" }
+      ]
+    }
+  ]
+}

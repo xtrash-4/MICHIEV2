@@ -1,0 +1,13 @@
+{
+  "name": "michie-archive-about-you",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "dist": "node build/build.mjs"
+  },
+  "devDependencies": {
+    "html-minifier-terser": "7.2.0",
+    "javascript-obfuscator": "4.1.1"
+  }
+}

@@ -1,0 +1,13 @@
+Copyright (c) 2026 Michie Archive. All rights reserved.
+
+This repository and the website built from it, including its source code,
+visual design, animations, photographs, text and other assets, are the
+property of Michie Archive (or are used with permission from their owners).
+
+No license is granted. You may not copy, modify, reproduce, republish,
+redistribute, sell, or use any part of this work, in whole or in part, or
+use it to train or prompt software or AI systems to recreate it, without
+prior written permission from the copyright holder.
+
+The song "About You" is the property of its respective rights holders and is
+not covered by any permission in this repository.

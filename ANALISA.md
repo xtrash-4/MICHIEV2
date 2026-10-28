@@ -160,3 +160,14 @@ Jalankan tetap lewat server lokal: `python -m http.server 5178 --directory rollf
 Situs asli adalah template berbayar milik HOLM, termasuk nama HOLMCHROME, foto potret, teks, dan kodenya. Rekonstruksi ini meniru **teknik dan rasa** efeknya dengan kode baru, memakai brand dan foto placeholder. Jangan pakai foto, logo, nama, atau teks mereka. Kalau mau versi yang benar-benar identik, beli templatenya dari mereka.
 
 Isi folder `about-u/` (lagu, lirik, foto) milik pemiliknya masing-masing. Lagu "About You" milik The 1975 dan labelnya. Untuk dipakai pribadi tidak masalah, tapi kalau web ini mau dipublikasikan, pastikan kamu punya izin memakai lagu dan foto itu.
+
+## 8. Perlindungan dari penyalinan (jujur)
+
+Yang dipasang: kode di `dist/` diacak dan dikunci domain, data lirik dan waktu disimpan terenkode, foto diberi watermark dan info hak cipta, ada tanda © di layar, `robots.txt` untuk crawler AI, header anti-hotlink, dan lisensi "All rights reserved". Detail dan cara pakai ada di `README.md`.
+
+Batasnya:
+- Semua yang tampil di browser tetap bisa direkam atau diunduh. Pengacakan kode memperlambat orang, tapi tidak mencegah 100%.
+- Ide dan efek visualnya bisa dibuat ulang dengan kode baru oleh orang atau AI yang hanya melihat webnya. Hal ini tidak bisa diblokir secara teknis.
+- `robots.txt` dan tag `noai` hanya dipatuhi bot yang taat aturan.
+- Watermark di pojok bisa dipotong.
+- Perlindungan paling efektif: repo GitHub **private**, dan klaim hak cipta (DMCA) kalau ada yang memakai foto atau kodemu.

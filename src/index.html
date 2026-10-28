@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>About You · Michie Archive</title>
 <meta name="theme-color" content="#f6f6f6" />
-<link rel="icon" href="about-u/album.jpg" />
+<link rel="icon" href="../about-u/album.jpg" />
+<meta name="copyright" content="© 2026 Michie Archive. All rights reserved." />
+<meta name="robots" content="noai, noimageai" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -36,6 +38,7 @@ button{touch-action:manipulation}
   font:500 10.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;opacity:0;transition:opacity .9s}
 body.ready #hud{opacity:1}
 .h-name{position:fixed;top:var(--gt);left:var(--gl);font:700 15px/1 var(--sans);letter-spacing:-.02em}
+.h-copy{display:block;margin-top:7px;font:500 8.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;opacity:.45}
 .h-rec{position:fixed;top:calc(var(--gt) + 2px);right:var(--gr);display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums}
 .h-rec .dot{width:7px;height:7px;border-radius:50%;background:#e23b2e;opacity:.25}
 body.playing .h-rec .dot{animation:blink 1s steps(1) infinite}
@@ -153,9 +156,9 @@ body.tall .ly-prog i{background:var(--ink)}
 <canvas id="gl" aria-label="Film strip of photos"></canvas>
 
 <div id="hud">
-  <div class="h-name">MICHIE ARCHIVE</div>
+  <div class="h-name">MICHIE ARCHIVE<small class="h-copy">© 2026 All rights reserved</small></div>
   <div class="h-rec"><span class="dot"></span><span class="tc">00:00:00:00</span></div>
-  <div class="h-now"><div class="disc"><img src="about-u/album.jpg" alt="" /></div><div><b class="t-title">About You</b><span class="t-artist">The 1975</span></div></div>
+  <div class="h-now"><div class="disc"><img src="../about-u/album.jpg" alt="" /></div><div><b class="t-title">About You</b><span class="t-artist">The 1975</span></div></div>
   <div class="h-frame"><span class="fr-count">Frame 01 / 10</span><span class="fr-date">'26 09 09</span><button class="h-btn pl-play" aria-label="Play or pause">Play</button></div>
   <div class="h-bar" role="slider" aria-label="Seek"><i></i></div>
 </div>
@@ -165,7 +168,7 @@ body.tall .ly-prog i{background:var(--ink)}
 <div id="cursor" class="hidden"><div class="ring"></div><div class="label">LOOK</div></div>
 
 <div id="start" role="button" aria-label="Play">
-  <button class="st-disc" aria-label="Play"><img src="about-u/album.jpg" alt="" /></button>
+  <button class="st-disc" aria-label="Play"><img src="../about-u/album.jpg" alt="" /></button>
   <h2 class="st-title">About You</h2>
   <div class="st-sub"><span class="st-artist">The 1975</span><span>·</span><span class="st-hint">Tap to play</span></div>
 </div>
@@ -185,7 +188,7 @@ THREE.ColorManagement.enabled = false;
    (salinan index.js dari michie-archive, bagian "syncData").
    ===================================================================== */
 const CONFIG = {
-  folder: 'about-u/',
+  folder: '../about-u/',   // build changes this to about-u/ in dist
   song: 'lagu.mp3',
   syncFile: 'sync-source.js',
   title: 'About You',
@@ -240,6 +243,8 @@ const Q = {
    SYNC DATA (read from the copied source file, not retyped)
    ===================================================================== */
 async function loadSync() {
+  // the deployed build embeds the data (encoded) instead of shipping sync-source.js
+  if (typeof __SYNC_DATA__ !== 'undefined') return structuredClone(__SYNC_DATA__);
   const res = await fetch(CONFIG.folder + CONFIG.syncFile);
   if (!res.ok) throw new Error('sync file not found');
   const src = await res.text();
@@ -460,7 +465,8 @@ function frameCanvas(i) {
   g.font = `700 ${1.3 * mm}px "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif`;
   if ('letterSpacing' in g) g.letterSpacing = `${.12 * mm}px`;
   g.fillText(CONFIG.code, 4 * mm, 1.25 * mm);
-  g.fillText(CONFIG.stock, 21 * mm, 1.25 * mm);
+  // every other frame carries the copyright mark on its edge, like real film edge print
+  g.fillText(i % 2 ? '© MICHIE ARCHIVE' : CONFIG.stock, 21 * mm, 1.25 * mm);
   const n = i + 1;
   g.fillText(String(n), 6 * mm, H - 1.25 * mm);
   g.fillText(`${n}A`, 25 * mm, H - 1.25 * mm);
