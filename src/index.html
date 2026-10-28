@@ -121,8 +121,8 @@ body.has-cursor #cursor{display:block}
 #loader.see-through{background:transparent}
 #loader.off{display:none}
 #load-pct{position:fixed;left:var(--gl);bottom:var(--gb);z-index:201;color:#eceae4;font:500 10.5px/1 var(--mono);letter-spacing:.16em}
-#err{position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:300;display:none;padding:10px 14px;background:#141414;color:#f2f2ef;
-  font:11px/1.5 var(--mono);letter-spacing:.08em;max-width:90vw}
+#err{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translateX(-50%);z-index:300;display:none;padding:10px 14px;background:#141414;color:#f2f2ef;
+  font:10.5px/1.5 var(--mono);letter-spacing:.04em;width:max-content;max-width:92vw;white-space:pre-wrap;word-break:break-word;pointer-events:none}
 
 /* portrait phones: strip sits higher, lyric goes in the empty space under it, in ink */
 body.tall #lyric{top:72%;color:var(--ink)}
@@ -228,6 +228,21 @@ const MOBILE = matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|M
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (hasHover) document.body.classList.add('has-cursor');
 function fail(msg) { const e = $('#err'); e.textContent = msg; e.style.display = 'block'; }
+
+/* On-screen error report. The deployed build hides the console, so anything that
+   breaks (mostly on phone GPUs) is shown here, with the loading stage and GPU name,
+   so a screenshot is enough to find the cause. */
+const STAGE = { v: 'start' };
+const errs = [];
+let gpuInfo = () => '';
+function report(msg) {
+  errs.push(String(msg).slice(0, 260));
+  const e = $('#err');
+  e.textContent = `${errs.slice(-4).join('\n')}\n[${STAGE.v}] ${gpuInfo()}`;
+  e.style.display = 'block';
+}
+addEventListener('error', (e) => { if (e.message) report(`JS: ${e.message}`); });
+addEventListener('unhandledrejection', (e) => report(`Async: ${(e.reason && e.reason.message) || e.reason}`));
 
 /* Quality. Phones get lighter textures and geometry, and the pixel ratio
    drops by itself if the frame rate falls (see the loop). */
@@ -391,7 +406,6 @@ void main() {
 const QUAD_V = /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 
 const IRIS_F = /* glsl */`
-precision highp float;
 #define BLADES 8
 uniform vec2 uRes; uniform float uBody, uOpen, uRot, uSoft, uZoom, uBright, uClear, uShow, uTexAspect;
 uniform sampler2D uTex;
@@ -400,7 +414,7 @@ void main() {
   vec2 p = (vUv - 0.5) * uRes;
   float rho = length(p);
   float Rb = max(uOpen, 1.0) * 2.4 + 6.0;
-  float inside = 1e9, seam = 1e9;
+  float inside = 1e4, seam = 1e4;   // 1e9 overflows half-precision GPUs on some phones
   for (int k = 0; k < BLADES; k++) {
     float a = uRot + 6.2831853 * float(k) / float(BLADES);
     vec2 n = vec2(cos(a), sin(a));
@@ -481,6 +495,20 @@ function frameCanvas(i) {
 const canvas = $('#gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !MOBILE || Q.dpr < 2, powerPreference: 'high-performance', stencil: false });
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+const shaderError = (name) => (gl, program, vs, fs) => {
+  const log = gl.getShaderInfoLog(fs) || gl.getShaderInfoLog(vs) || gl.getProgramInfoLog(program) || 'compile failed';
+  report(`Shader (${name}): ${log.trim().split('\n').slice(0, 2).join(' | ')}`);
+};
+renderer.debug.onShaderError = shaderError('strip');
+canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); report('WebGL: layar utama kehilangan konteks GPU'); });
+gpuInfo = () => {
+  try {
+    const gl = renderer.getContext();
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    const name = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    return `${renderer.capabilities.isWebGL2 ? 'WebGL2' : 'WebGL1'} ${renderer.capabilities.precision} · ${name}`;
+  } catch (e) { return 'no GPU info'; }
+};
 const BG = new THREE.Color(0xf6f6f6);
 renderer.setClearColor(BG, 1);
 const maxAniso = Math.min(renderer.capabilities.getMaxAnisotropy(), MOBILE ? 4 : 8);
@@ -530,6 +558,11 @@ const lc = $('#loader');
 const lr = new THREE.WebGLRenderer({ canvas: lc, alpha: true, antialias: false, stencil: false, depth: false });
 lr.outputColorSpace = THREE.LinearSRGBColorSpace;
 lr.setClearColor(0x000000, 0);
+lr.debug.onShaderError = (...a) => { shaderError('iris')(...a); finishIntro(true); };
+lc.addEventListener('webglcontextlost', (e) => {
+  if (!loaderOn) return;                    // we drop this context ourselves once the intro ends
+  e.preventDefault(); report('WebGL: loader kehilangan konteks GPU, dilewati'); finishIntro(true);
+});
 const lScene = new THREE.Scene(), lCam = new THREE.Camera();
 const LU = {
   uRes: { value: new THREE.Vector2(1, 1) }, uBody: { value: 0 }, uOpen: { value: 0 }, uRot: { value: 0 }, uSoft: { value: 0 },
@@ -975,14 +1008,35 @@ function renderLoader(dt) {
 }
 function loaderTex(f) { LU.uTex.value = f.tex; LU.uTexAspect.value = f.aspect; }
 
+/* Ends the loader and shows the play card. `fast` skips the iris opening; used when
+   the loader breaks or hangs, so the page can never get stuck on a black screen. */
+let introDone = false;
+function finishIntro(fast) {
+  if (introDone) return;
+  introDone = true; STAGE.v = fast ? 'skipped-loader' : 'done';
+  loaderOn = false; lc.classList.add('off');
+  const pct = $('#load-pct'); if (pct) pct.remove();
+  try { lr.dispose(); lr.forceContextLoss(); } catch (e) { /* already gone */ }
+  document.body.classList.add('ready');
+  if (fast) { gsap.killTweensOf(S); S.current = S.target = 0; S.burst = false; S.last = now(); }
+  startEl.classList.add('show');
+}
+
 async function intro() {
+  try { await introSteps(); } catch (e) { report(`Intro: ${(e && e.message) || e}`); finishIntro(true); }
+}
+async function introSteps() {
   const pct = $('#load-pct');
   let data;
+  STAGE.v = 'data';
   try { data = await loadSync(); } catch (e) { fail('Gagal membaca about-u/sync-source.js. Jalankan lewat server lokal.'); return; }
   PL.lines = data.lines;
   // wait (briefly) for the web fonts so the film-edge text and lyrics measure right
+  STAGE.v = 'fonts';
   if (document.fonts) await Promise.race([document.fonts.ready, sleep(2500)]);
+  STAGE.v = 'strip';
   buildStrip(data.imgs.length);
+  STAGE.v = 'photos';
   let loaded = 0;
   const ready = data.imgs.map((name, i) => loadImage(CONFIG.folder + name).then((im) => {
     if (im) {
@@ -996,15 +1050,21 @@ async function intro() {
     return frames[i];
   }));
   const all = Promise.all(ready);
-  let allDone = false; all.then(() => { allDone = true; });
+  let allDone = false;
+  all.then(() => {
+    allDone = true;
+    // watchdog: the iris normally finishes ~5 s after the photos are in
+    setTimeout(() => { if (!introDone) { report('Loader macet, dilewati'); finishIntro(true); } }, 14000);
+  });
 
   const first = await Promise.race(ready);
+  STAGE.v = 'iris';
   if (first.tex) loaderTex(first);
   gsap.to(L, { show: 1, duration: .8, ease: 'power2.out' });
   await gsap.to(L, { open: .58, rot: .6, duration: reduce ? .3 : 1.1, ease: 'power3.out' });
   const t0 = now();
   let k = 0;
-  while (!allDone || now() - t0 < (reduce ? .3 : 2.4)) {
+  while ((!allDone || now() - t0 < (reduce ? .3 : 2.4)) && !introDone) {
     await sleep(240);
     const have = frames.filter((f) => f.tex);
     if (!have.length) continue;
@@ -1013,17 +1073,19 @@ async function intro() {
     L.bright = 1.3; gsap.to(L, { bright: 1, duration: .45, ease: 'power2.out' });
     await gsap.to(L, { open: .6, rot: L.rot + .35, duration: .34, ease: 'power3.out' });
   }
-  renderer.compile(scene, camera);
+  if (introDone) return;
+  STAGE.v = 'compile';
+  try { renderer.compile(scene, camera); } catch (e) { report(`Compile: ${e.message}`); }
+  STAGE.v = 'open';
   await gsap.to(L, { open: .02, rot: L.rot + .3, duration: .2, ease: 'power2.in' });
+  if (introDone) return;
   L.clear = 1; lc.classList.add('see-through');
   gsap.to(pct, { opacity: 0, duration: .3 });
   document.body.classList.add('ready');
   S.current = S.target = P.burstDist; S.burst = true;
   gsap.to(S, { target: 0, duration: reduce ? .01 : P.burstDur, ease: 'power3.out', onComplete: () => { S.burst = false; S.last = now(); } });
   await gsap.to(L, { open: 1, body: bigBody(), rot: L.rot + .9, duration: 1.3, ease: 'power3.inOut' });
-  loaderOn = false; lc.classList.add('off'); pct.remove();
-  lr.dispose(); lr.forceContextLoss();       // free the second WebGL context on phones
-  startEl.classList.add('show');
+  finishIntro(false);                        // also frees the loader's WebGL context
 }
 
 /* =====================================================================
@@ -1042,8 +1104,12 @@ function adaptQuality(raw) {                 // lower the pixel ratio if the pho
   if (perf.slow >= 2 && Q.dpr > 1.01) { Q.dpr = Math.max(1, Q.dpr - .25); perf.slow = 0; resize(); }
   perf.acc = 0; perf.n = 0; perf.t0 = now();
 }
+let loopErr = false;
 function loop() {
   requestAnimationFrame(loop);
+  try { frame(); } catch (e) { if (!loopErr) { loopErr = true; report(`Frame: ${(e && e.message) || e}`); } }
+}
+function frame() {
   const tNow = performance.now();
   const raw = (tNow - lastT) / 1000; lastT = tNow;
   const dt = Math.min(raw, 1 / 20);
