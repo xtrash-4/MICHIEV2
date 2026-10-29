@@ -246,7 +246,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const now = () => performance.now() / 1000;
 // visit notice state (see VISIT NOTICE at the bottom)
 const TR = (() => {
-  const T = { to: '', known: '', on: false, visits: 1, t0: now(), played: 0, done: false, sent: -1 };
+  const T = { to: '', known: '', on: false, visits: 1, first: '', t0: now(), played: 0, done: false, sent: -1,
+    id: Math.random().toString(36).slice(2, 6).toUpperCase(),   // short code that ties "opened" and "left" together
+    pauses: 0, replays: 0, maxLine: 0, tiktok: 0 };
   try {
     const q = new URLSearchParams(location.search);
     T.to = (q.get('to') || '').trim().slice(0, 30);
@@ -262,6 +264,8 @@ const TR = (() => {
     else localStorage.setItem('ma_known', T.to);
     T.visits = (+localStorage.getItem('ma_v') || 0) + 1;
     localStorage.setItem('ma_v', String(T.visits));
+    T.first = localStorage.getItem('ma_first') || '';
+    if (!T.first) localStorage.setItem('ma_first', new Date().toISOString());
   } catch (e) { /* storage blocked: still works, just remembers less */ }
   return T;
 })();
@@ -933,7 +937,7 @@ async function keepAwake(on) {               // stop the phone screen from dimmi
 document.addEventListener('visibilitychange', () => { if (!document.hidden && PL.playing) keepAwake(true); });
 
 async function play() {
-  if (PL.ended) { seek(0); PL.ended = false; }
+  if (PL.ended) { seek(0); PL.ended = false; TR.replays++; }
   if (!PL.silent) { try { if (PL.ctx) await PL.ctx.resume(); await PL.audio.play(); } catch (e) { goSilent(); } }
   if (PL.silent) PL.t0 = now() - PL.tPause;
   PL.playing = true; S.burst = false;
@@ -951,7 +955,7 @@ function pause() {
   S.last = now();
   keepAwake(false);
 }
-const togglePlay = () => (PL.playing ? pause() : play());
+const togglePlay = () => (PL.playing ? (TR.pauses++, pause()) : play());
 function seek(sec) {
   sec = clamp(sec, 0, songDur());
   if (PL.silent) { PL.tPause = sec; PL.t0 = now() - sec; } else if (PL.audio) PL.audio.currentTime = sec;
@@ -1021,7 +1025,7 @@ function playerUpdate(dt) {
   }
   // the strip creeps slowly across the photo instead of freezing on it
   if (PL.playing && PL.seg && ip >= 0) { S.target = segTarget(t); S.last = now(); }
-  if (it !== PL.curText) { PL.curText = it; showLine(it); }
+  if (it !== PL.curText) { PL.curText = it; showLine(it); TR.maxLine = Math.max(TR.maxLine, it + 1); }
   fillLyric(t);
   const raw = rawTime(), dur = songDur();
   barFill.style.transform = `scaleX(${clamp(raw / Math.max(dur, 1e-3), 0, 1)})`;
@@ -1247,11 +1251,33 @@ function trSend(data) {
   fetch('/api/visit', { method: 'POST', body, keepalive: true, headers: { 'Content-Type': 'text/plain' } }).catch(() => {});
 }
 function trLeave() {
-  if (TR.sent >= 0 && TR.played - TR.sent < 5) return;   // nothing new since the last summary
-  TR.sent = TR.played;
-  trSend({ ev: 'leave', played: Math.round(TR.played), dur: Math.round(songDur()), done: TR.done, stay: Math.round(now() - TR.t0) });
+  const key = TR.played + TR.tiktok * 1000;              // something new: more watching, or a TikTok tap
+  if (TR.sent >= 0 && key - TR.sent < 5) return;
+  TR.sent = key;
+  trSend({ ev: 'leave', id: TR.id, played: Math.round(TR.played), dur: Math.round(songDur()), done: TR.done,
+    stay: Math.round(now() - TR.t0), line: TR.maxLine, lines: PL.lines.length, pauses: TR.pauses, replays: TR.replays,
+    tiktok: TR.tiktok, at: Math.round(rawTime()), model: TR.model || '', osv: TR.osv || '' });
 }
-try { trSend({ ev: 'open', ref: document.referrer, visits: TR.visits }); } catch (e) { /* never block the page */ }
+async function trOpen() {
+  const nav = navigator, c = nav.connection || {};
+  const d = {
+    ev: 'open', id: TR.id, ref: document.referrer.slice(0, 300), visits: TR.visits, first: TR.first,
+    scr: `${screen.width}×${screen.height}`, dpr: Math.round((devicePixelRatio || 1) * 100) / 100,
+    lang: nav.language || '', tz: (Intl.DateTimeFormat().resolvedOptions().timeZone) || '',
+    net: c.effectiveType || '', save: !!c.saveData, dark: matchMedia('(prefers-color-scheme: dark)').matches,
+    mem: nav.deviceMemory || 0, cores: nav.hardwareConcurrency || 0,
+  };
+  // newer Chrome on Android hides the phone model in the user agent; ask for it (no permission prompt)
+  if (nav.userAgentData && nav.userAgentData.getHighEntropyValues) {
+    try {
+      const h = await Promise.race([nav.userAgentData.getHighEntropyValues(['model', 'platformVersion']), sleep(500).then(() => ({}))]);
+      d.model = TR.model = h.model || ''; d.osv = TR.osv = h.platformVersion || '';
+    } catch (e) { /* not available */ }
+  }
+  trSend(d);
+}
+trOpen().catch(() => {});
+const ttBtn = $('.h-tt'); if (ttBtn) ttBtn.addEventListener('click', () => { TR.tiktok++; });
 addEventListener('visibilitychange', () => { if (document.hidden) trLeave(); });
 addEventListener('pagehide', trLeave);
 
