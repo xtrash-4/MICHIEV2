@@ -244,6 +244,27 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const pad = (n) => String(n).padStart(2, '0');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const now = () => performance.now() / 1000;
+// visit notice state (see VISIT NOTICE at the bottom)
+const TR = (() => {
+  const T = { to: '', known: '', on: false, visits: 1, t0: now(), played: 0, done: false, sent: -1 };
+  try {
+    const q = new URLSearchParams(location.search);
+    T.to = (q.get('to') || '').trim().slice(0, 30);
+    if (q.has('to')) {
+      q.delete('to');
+      const rest = q.toString();
+      history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
+    }
+    T.on = !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+    // a reload keeps the name for this tab; this phone remembers the last name it came with
+    if (T.to) sessionStorage.setItem('ma_to', T.to); else T.to = sessionStorage.getItem('ma_to') || '';
+    if (!T.to) T.known = localStorage.getItem('ma_known') || '';
+    else localStorage.setItem('ma_known', T.to);
+    T.visits = (+localStorage.getItem('ma_v') || 0) + 1;
+    localStorage.setItem('ma_v', String(T.visits));
+  } catch (e) { /* storage blocked: still works, just remembers less */ }
+  return T;
+})();
 const hasHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
 const MOBILE = matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -937,7 +958,7 @@ function seek(sec) {
   PL.curText = PL.curPhoto = -2; PL.clk = null;
 }
 function onEnded() {
-  pause(); PL.ended = true;
+  pause(); PL.ended = true; TR.done = true;
   setTimeout(() => {
     if (!PL.ended) return;
     $('.st-hint').textContent = 'Play again';
@@ -988,6 +1009,7 @@ function smoothClock(dt) {
 }
 function playerUpdate(dt) {
   if (!PL.started) return;
+  if (PL.playing) TR.played += dt;
   if (PL.silent && PL.playing && now() - PL.t0 > songDur()) onEnded();
   const t = smoothClock(dt) + CONFIG.offset;
   const it = lineAt(t), ip = lineAt(t + CONFIG.photoLead);
@@ -1211,6 +1233,28 @@ $('.t-artist').textContent = $('.st-artist').textContent = CONFIG.artist;
 let rzTimer = 0;
 addEventListener('resize', () => { clearTimeout(rzTimer); rzTimer = setTimeout(resize, 80); });
 addEventListener('orientationchange', () => setTimeout(resize, 250));
+/* =====================================================================
+   VISIT NOTICE
+   Tells the owner (through /api/visit → Telegram) when someone opens the page,
+   and how long they watched when they leave. Give each person their own link:
+   https://<site>/?to=rina . The name is then removed from the address bar, so
+   a copied link doesn't count as that person. Nothing runs on localhost.
+   ===================================================================== */
+function trSend(data) {
+  if (!TR.on) return;
+  const body = JSON.stringify({ to: TR.to, known: TR.known, ...data });
+  try { if (navigator.sendBeacon && navigator.sendBeacon('/api/visit', new Blob([body], { type: 'text/plain' }))) return; } catch (e) { /* fall back */ }
+  fetch('/api/visit', { method: 'POST', body, keepalive: true, headers: { 'Content-Type': 'text/plain' } }).catch(() => {});
+}
+function trLeave() {
+  if (TR.sent >= 0 && TR.played - TR.sent < 5) return;   // nothing new since the last summary
+  TR.sent = TR.played;
+  trSend({ ev: 'leave', played: Math.round(TR.played), dur: Math.round(songDur()), done: TR.done, stay: Math.round(now() - TR.t0) });
+}
+try { trSend({ ev: 'open', ref: document.referrer, visits: TR.visits }); } catch (e) { /* never block the page */ }
+addEventListener('visibilitychange', () => { if (document.hidden) trLeave(); });
+addEventListener('pagehide', trLeave);
+
 resize();
 loop();
 intro();
