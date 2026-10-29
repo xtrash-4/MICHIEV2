@@ -1,6 +1,6 @@
 # About You · Michie Archive
 
-© 2026 Michie Archive. All rights reserved. Lihat [LICENSE](LICENSE).
+© 2026 Husni · Michie Archive. Created by Husni. All rights reserved. Lihat [LICENSE](LICENSE).
 
 Satu halaman: pita film 3D yang bergerak mengikuti lagu "About You", dengan foto dan lirik yang berganti sesuai waktunya.
 

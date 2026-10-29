@@ -38,7 +38,7 @@ for name in files:
     im = Image.alpha_composite(im.convert("RGBA"), layer).convert("RGB")
 
     exif = Image.Exif()
-    exif[0x013B] = "Michie Archive"   # Artist
-    exif[0x8298] = notice.replace("©", "(c)")   # Copyright (EXIF text is ASCII only)
+    exif[0x013B] = "Husni (Michie Archive)"   # Artist
+    exif[0x8298] = notice.replace("©", "(c)").replace("·", "-")   # Copyright (EXIF text is ASCII only)
     im.save(out / name, "JPEG", quality=88, optimize=True, progressive=True, exif=exif.tobytes())
     print("watermarked", name)

@@ -1,8 +1,9 @@
-Copyright (c) 2026 Michie Archive. All rights reserved.
+Copyright (c) 2026 Husni (Michie Archive). All rights reserved.
+Created by Husni.
 
 This repository and the website built from it, including its source code,
 visual design, animations, photographs, text and other assets, are the
-property of Michie Archive (or are used with permission from their owners).
+property of Husni / Michie Archive (or are used with permission from their owners).
 
 No license is granted. You may not copy, modify, reproduce, republish,
 redistribute, sell, or use any part of this work, in whole or in part, or

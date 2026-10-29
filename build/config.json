@@ -1,6 +1,6 @@
 {
   "domains": ["localhost", "127.0.0.1", ".vercel.app"],
   "redirect": "about:blank",
-  "watermark": "© MICHIE ARCHIVE",
-  "copyright": "© 2026 Michie Archive. All rights reserved."
+  "watermark": "© HUSNI · MICHIE ARCHIVE",
+  "copyright": "© 2026 Husni · Michie Archive. Created by Husni. All rights reserved."
 }

@@ -6,7 +6,8 @@
 <title>About You · Michie Archive</title>
 <meta name="theme-color" content="#f6f6f6" />
 <link rel="icon" href="../about-u/album.jpg" />
-<meta name="copyright" content="© 2026 Michie Archive. All rights reserved." />
+<meta name="author" content="Husni" />
+<meta name="copyright" content="© 2026 Husni · Michie Archive. All rights reserved." />
 <meta name="robots" content="noai, noimageai" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -39,6 +40,14 @@ button{touch-action:manipulation}
 body.ready #hud{opacity:1}
 .h-name{position:fixed;top:var(--gt);left:var(--gl);font:700 15px/1 var(--sans);letter-spacing:-.02em}
 .h-copy{display:block;margin-top:7px;font:500 8.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;opacity:.45}
+/* TikTok button: small glass pill, the logo keeps its cyan/red split */
+.h-tt{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:7px 12px 7px 9px;border-radius:999px;
+  border:1px solid rgba(25,25,25,.16);background:rgba(246,246,246,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  color:var(--ink);text-decoration:none;font:500 9px/1 var(--mono);letter-spacing:.1em;text-transform:none;
+  transition:background .3s,color .3s,border-color .3s,transform .3s cubic-bezier(.3,.7,.2,1.2)}
+.h-tt svg{width:14px;height:14px;fill:currentColor;flex:none;filter:drop-shadow(-1px -1px 0 #25f4ee) drop-shadow(1px 1px 0 #fe2c55)}
+.h-tt:hover,.h-tt:focus-visible{background:var(--ink);color:#fff;border-color:var(--ink);transform:translateY(-1px)}
+.h-tt:active{transform:scale(.96)}
 .h-rec{position:fixed;top:calc(var(--gt) + 2px);right:var(--gr);display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums}
 .h-rec .dot{width:7px;height:7px;border-radius:50%;background:#e23b2e;opacity:.25}
 body.playing .h-rec .dot{animation:blink 1s steps(1) infinite}
@@ -115,12 +124,17 @@ body.has-cursor #cursor{display:block}
   border-left:24px solid #fff;border-top:13px solid transparent;border-bottom:13px solid transparent;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))}
 #start h2{font:400 clamp(48px,7vw,104px)/.9 var(--serif);font-style:italic;letter-spacing:-.025em;text-transform:none}
 #start .st-sub{display:flex;gap:16px;opacity:.7}
+/* maker's credit: mono label with a hand-signed serif name */
+.st-credit{display:flex;align-items:center;gap:12px;font:500 9.5px/1 var(--mono);letter-spacing:.32em;opacity:.8}
+.st-credit::before,.st-credit::after{content:'';width:28px;height:1px;background:currentColor;opacity:.5}
+.st-credit em,.load-credit em{font:400 1.95em/1 var(--serif);font-style:italic;letter-spacing:0;text-transform:none}
 
 /* ---------- loader ---------- */
 #loader{position:fixed;inset:0;z-index:200;width:100%;height:100%;display:block;background:#000}
 #loader.see-through{background:transparent}
 #loader.off{display:none}
 #load-pct{position:fixed;left:var(--gl);bottom:var(--gb);z-index:201;color:#eceae4;font:500 10.5px/1 var(--mono);letter-spacing:.16em}
+.load-credit{position:fixed;right:var(--gl);bottom:var(--gb);z-index:201;color:#eceae4;font:500 9.5px/1 var(--mono);letter-spacing:.28em;text-transform:uppercase;opacity:.75}
 #err{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translateX(-50%);z-index:300;display:none;padding:10px 14px;background:#141414;color:#f2f2ef;
   font:10.5px/1.5 var(--mono);letter-spacing:.04em;width:max-content;max-width:92vw;white-space:pre-wrap;word-break:break-word;pointer-events:none}
 
@@ -156,7 +170,12 @@ body.tall .ly-prog i{background:var(--ink)}
 <canvas id="gl" aria-label="Film strip of photos"></canvas>
 
 <div id="hud">
-  <div class="h-name">MICHIE ARCHIVE<small class="h-copy">© 2026 All rights reserved</small></div>
+  <div class="h-name">MICHIE ARCHIVE<small class="h-copy">© 2026 · Created by Husni</small>
+    <a class="h-tt" href="https://www.tiktok.com/@kanjuttmonyett" target="_blank" rel="noopener" aria-label="Husni on TikTok">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+      <span>@kanjuttmonyett</span>
+    </a>
+  </div>
   <div class="h-rec"><span class="dot"></span><span class="tc">00:00:00:00</span></div>
   <div class="h-now"><div class="disc"><img src="../about-u/album.jpg" alt="" /></div><div><b class="t-title">About You</b><span class="t-artist">The 1975</span></div></div>
   <div class="h-frame"><span class="fr-count">Frame 01 / 10</span><span class="fr-date">'26 09 09</span><button class="h-btn pl-play" aria-label="Play or pause">Play</button></div>
@@ -171,10 +190,12 @@ body.tall .ly-prog i{background:var(--ink)}
   <button class="st-disc" aria-label="Play"><img src="../about-u/album.jpg" alt="" /></button>
   <h2 class="st-title">About You</h2>
   <div class="st-sub"><span class="st-artist">The 1975</span><span>·</span><span class="st-hint">Tap to play</span></div>
+  <div class="st-credit">Created by <em>Husni</em></div>
 </div>
 
 <canvas id="loader"></canvas>
 <div id="load-pct">000</div>
+<div class="load-credit">Created by <em>Husni</em></div>
 <div id="err"></div>
 
 <script type="module">
@@ -202,14 +223,14 @@ const CONFIG = {
 };
 
 const P = {
-  tau: .32, wheelFactor: .0016, maxVel: 5, magnet: 4.5,
-  twistAmp: .68, twistFreq: 2, velAmp: .16, velFreq: 2.2, restAmp: .05, beatAmp: .09,
+  spring: 4.2, springFast: 7, wheelFactor: .0016, maxVel: 5, magnet: 4.5,
+  twistAmp: .68, twistFreq: 2, velAmp: .16, velFreq: 2.2, restAmp: .05, beatAmp: .06,
   fadeStart: 3.25, fadeEnd: 3.8, fadeStrength: .85, edgeDark: .12,
   camX: .6, camY: -.45, camZ: 2.37, targetX: 0, targetY: .05, diagonal: -.1, fov: 40,
   bwContrast: .5, satIn: .3, satOut: .85,
   loupeR: 70, loupeSoft: 14, loupeMag: 1.35,
   hoverLift: .05, hoverCurl: .09, hoverSpeed: 7, cursorLerp: 10,
-  beatAttack: .09, beatRelease: .5,   // seconds: how fast the bass swell rises and settles
+  beatAttack: .18, beatRelease: .7,  // seconds: how fast the bass swell rises and settles
   rippleAmp: .045, rippleFreq: 30, rippleSpeed: 9, rippleDur: .5,
   burstDur: 2.6, burstDist: 2.2,
   pan: .08,          // while a photo is on screen the strip creeps from +pan to -pan
@@ -479,8 +500,8 @@ function frameCanvas(i) {
   g.font = `700 ${1.3 * mm}px "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif`;
   if ('letterSpacing' in g) g.letterSpacing = `${.12 * mm}px`;
   g.fillText(CONFIG.code, 4 * mm, 1.25 * mm);
-  // every other frame carries the copyright mark on its edge, like real film edge print
-  g.fillText(i % 2 ? '© MICHIE ARCHIVE' : CONFIG.stock, 21 * mm, 1.25 * mm);
+  // frame edges carry the maker's mark and the copyright, like real film edge print
+  g.fillText(['CREATED BY HUSNI', '© MICHIE ARCHIVE', CONFIG.stock][i % 3], 21 * mm, 1.25 * mm);
   const n = i + 1;
   g.fillText(String(n), 6 * mm, H - 1.25 * mm);
   g.fillText(`${n}A`, 25 * mm, H - 1.25 * mm);
@@ -621,7 +642,7 @@ addEventListener('deviceorientation', (e) => {
 /* =====================================================================
    SCROLL / INPUT
    ===================================================================== */
-const S = { current: 0, target: 0, last: 0, burst: true };
+const S = { current: 0, target: 0, vel: 0, last: 0, burst: true };
 const pointer = { x: -1e4, y: -1e4, sx: -1e4, sy: -1e4, inside: false };
 let dragging = false, dragX = 0, downX = 0, downY = 0, dragVel = 0;
 const centerIndex = () => wrap(Math.round(-S.current));
@@ -913,7 +934,7 @@ const togglePlay = () => (PL.playing ? pause() : play());
 function seek(sec) {
   sec = clamp(sec, 0, songDur());
   if (PL.silent) { PL.tPause = sec; PL.t0 = now() - sec; } else if (PL.audio) PL.audio.currentTime = sec;
-  PL.curText = PL.curPhoto = -2;
+  PL.curText = PL.curPhoto = -2; PL.clk = null;
 }
 function onEnded() {
   pause(); PL.ended = true;
@@ -955,18 +976,20 @@ function segTarget(t) {
 }
 // audio.currentTime advances in uneven steps in some browsers; run our own
 // smooth clock and only nudge it toward the audio (snap after a seek).
-function smoothClock() {
-  const a = rawTime(), n = now();
-  if (!PL.playing || PL.silent || PL.clk == null) { PL.clk = a; PL.clkAt = n; return a; }
-  const pred = PL.clk + (n - PL.clkAt);
-  PL.clk = Math.abs(a - pred) > .15 ? a : pred + (a - pred) * .06;
-  PL.clkAt = n;
+// It never runs backwards: if the audio stalls for a moment the clock waits for it
+// instead of snapping back (a snap back could flip the photo/lyric back and forth).
+function smoothClock(dt) {
+  const a = rawTime();
+  if (!PL.playing || PL.silent || PL.clk == null) { PL.clk = a; return a; }
+  const pred = PL.clk + dt;
+  if (Math.abs(a - pred) > .8) PL.clk = a;                    // a real seek or a long stall: jump
+  else PL.clk = Math.max(PL.clk, Math.min(pred + (a - pred) * .05, a + .1));
   return PL.clk;
 }
 function playerUpdate(dt) {
   if (!PL.started) return;
   if (PL.silent && PL.playing && now() - PL.t0 > songDur()) onEnded();
-  const t = smoothClock() + CONFIG.offset;
+  const t = smoothClock(dt) + CONFIG.offset;
   const it = lineAt(t), ip = lineAt(t + CONFIG.photoLead);
   if (ip !== PL.curPhoto) {
     const prevPhoto = PL.curPhoto >= 0 ? PL.lines[PL.curPhoto].photo : -1;
@@ -1015,10 +1038,10 @@ function finishIntro(fast) {
   if (introDone) return;
   introDone = true; STAGE.v = fast ? 'skipped-loader' : 'done';
   loaderOn = false; lc.classList.add('off');
-  const pct = $('#load-pct'); if (pct) pct.remove();
+  document.querySelectorAll('#load-pct, .load-credit').forEach((el) => el.remove());
   try { lr.dispose(); lr.forceContextLoss(); } catch (e) { /* already gone */ }
   document.body.classList.add('ready');
-  if (fast) { gsap.killTweensOf(S); S.current = S.target = 0; S.burst = false; S.last = now(); }
+  if (fast) { gsap.killTweensOf(S); S.current = S.target = S.vel = 0; S.burst = false; S.last = now(); }
   startEl.classList.add('show');
 }
 
@@ -1080,9 +1103,9 @@ async function introSteps() {
   await gsap.to(L, { open: .02, rot: L.rot + .3, duration: .2, ease: 'power2.in' });
   if (introDone) return;
   L.clear = 1; lc.classList.add('see-through');
-  gsap.to(pct, { opacity: 0, duration: .3 });
+  gsap.to([pct, $('.load-credit')].filter(Boolean), { opacity: 0, duration: .3 });
   document.body.classList.add('ready');
-  S.current = S.target = P.burstDist; S.burst = true;
+  S.current = S.target = P.burstDist; S.vel = 0; S.burst = true;
   gsap.to(S, { target: 0, duration: reduce ? .01 : P.burstDur, ease: 'power3.out', onComplete: () => { S.burst = false; S.last = now(); } });
   await gsap.to(L, { open: 1, body: bigBody(), rot: L.rot + .9, duration: 1.3, ease: 'power3.inOut' });
   finishIntro(false);                        // also frees the loader's WebGL context
@@ -1101,18 +1124,33 @@ function adaptQuality(raw) {                 // lower the pixel ratio if the pho
   const avg = perf.acc / Math.max(perf.n, 1);
   // only step down after two slow windows in a row, so one hiccup doesn't cause a visible resize
   perf.slow = perf.n > 30 && avg > 1 / 45 ? (perf.slow || 0) + 1 : 0;
-  if (perf.slow >= 2 && Q.dpr > 1.01) { Q.dpr = Math.max(1, Q.dpr - .25); perf.slow = 0; resize(); }
+  // at most two small steps per visit, so the picture never keeps re-sizing during the song
+  if (perf.slow >= 2 && Q.dpr > 1.01 && (perf.steps || 0) < 2) {
+    Q.dpr = Math.max(1, Q.dpr - .25); perf.slow = 0; perf.steps = (perf.steps || 0) + 1; resize();
+  }
   perf.acc = 0; perf.n = 0; perf.t0 = now();
 }
 let loopErr = false;
-function loop() {
+function loop(ts) {
   requestAnimationFrame(loop);
-  try { frame(); } catch (e) { if (!loopErr) { loopErr = true; report(`Frame: ${(e && e.message) || e}`); } }
+  try { frame(ts); } catch (e) { if (!loopErr) { loopErr = true; report(`Frame: ${(e && e.message) || e}`); } }
 }
-function frame() {
-  const tNow = performance.now();
+// Frame time comes from the rAF timestamp (locked to the screen refresh), not from
+// performance.now() inside the callback, which wobbles by up to ~18% per frame on phones.
+// Small wobble is averaged out; a real dropped frame still passes straight through.
+let dtS = 1 / 60;
+// critically damped spring, solved exactly for this frame: smooth start and stop, no overshoot
+function springStep(dt, w) {
+  const c1 = S.current - S.target, c2 = S.vel + w * c1, e = Math.exp(-w * dt);
+  S.current = S.target + (c1 + c2 * dt) * e;
+  S.vel = (c2 - w * (c1 + c2 * dt)) * e;
+}
+function frame(ts) {
+  const tNow = typeof ts === 'number' ? ts : performance.now();
   const raw = (tNow - lastT) / 1000; lastT = tNow;
-  const dt = Math.min(raw, 1 / 20);
+  const r = clamp(raw, 1 / 240, 1 / 20);
+  dtS += (r - dtS) * (Math.abs(r - dtS) > dtS * .5 ? 1 : .25);
+  const dt = dtS;
   adaptQuality(raw);
   U.uTime.value += dt;
   playerUpdate(dt);
@@ -1132,10 +1170,10 @@ function frame() {
     } else if (idle > P.idleAfter && !reduce) S.target -= dt * P.idleDrift * Math.min(1, (idle - P.idleAfter) / 2);
     else if (idle > .4) S.target += (Math.round(S.target) - S.target) * (1 - Math.exp(-dt * P.magnet));
   }
-  const prev = S.current;
-  S.current += (S.target - S.current) * (1 - Math.exp(-dt / P.tau));
-  const v = clamp((S.current - prev) / Math.max(dt, 1e-4), -P.maxVel, P.maxVel);
-  U.uVel.value += (v - U.uVel.value) * (1 - Math.exp(-dt * 8));
+  // the strip has weight: it eases into each new photo instead of starting at full speed
+  springStep(dt, dragging || idle < .35 ? P.springFast : P.spring);
+  const v = clamp(S.vel, -P.maxVel, P.maxVel);
+  U.uVel.value += (v - U.uVel.value) * (1 - Math.exp(-dt * 10));
   U.uScroll.value = S.current;
 
   const kp = 1 - Math.exp(-dt * (MOBILE ? 1.2 : 2.5));
